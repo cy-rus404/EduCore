@@ -21,7 +21,7 @@ import image3 from '../assets/images/teaching.jpg';
 
 const images = [image1, image2, image3];  // Array of local images
 
-const HomeScreen = () => {
+const HomeScreen = ({navigation}) => {
   const animation = useRef(new Animated.Value(0));
   const [currentImage, setCurrentImage] = useState(0);
   useInterval(() => handleAnimation(), 5000); // Automatically change images every 5 seconds
@@ -76,7 +76,7 @@ const HomeScreen = () => {
 
     </View>
     <View style={styles.contain}>
-      <TouchableOpacity style={styles.btn}>
+      <TouchableOpacity onPress={()=>navigation.navigate('Login')} style={styles.btn}>
         <Text style={styles.txt4}>Login</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.btn2}>
