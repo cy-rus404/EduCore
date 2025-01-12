@@ -14,13 +14,13 @@ const MAX_WIDTH = Dimensions.get('screen').width;
 // Import local images
 import image1 from '../assets/images/welcome.jpg';
 import image2 from '../assets/images/success.jpg';
-import image3 from '../assets/images/teaching.png';
+import image3 from '../assets/images/teaching.jpg';
 
 // Add more imports for other images if needed
 
 const images = [image1, image2, image3];  // Array of local images
 
-const Carousel = () => {
+const HomeScreen = () => {
   const animation = useRef(new Animated.Value(0));
   const [currentImage, setCurrentImage] = useState(0);
   useInterval(() => handleAnimation(), 5000); // Automatically change images every 5 seconds
@@ -41,6 +41,7 @@ const Carousel = () => {
   };
 
   return (
+    <View>
     <View>
       <Animated.View
         style={[
@@ -65,7 +66,10 @@ const Carousel = () => {
           />
         ))}
       </View>
-      <Text>Welcome To EduCore</Text>
+    </View>
+    <View>
+        <Text style={styles.txt}>Welcome To EduCore</Text>
+    </View>
     </View>
   );
 };
@@ -99,6 +103,11 @@ const styles = StyleSheet.create({
   activeIndicator: {
     backgroundColor: 'white',
   },
+  txt:{
+    fontWeight:'bold',
+    fontSize:20
+
+  }
 });
 
-export default Carousel;
+export default HomeScreen;
