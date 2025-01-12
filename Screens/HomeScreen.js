@@ -5,7 +5,8 @@ import {
   Image,
   StyleSheet,
   View,
-  Text
+  Text,
+  TouchableOpacity
 } from 'react-native';
 import useInterval from './useInterval';  // Ensure this is your updated useInterval hook
 
@@ -69,6 +70,19 @@ const HomeScreen = () => {
     </View>
     <View>
         <Text style={styles.txt}>Welcome To EduCore</Text>
+        <Text style={styles.txt2}>"Education Today</Text>
+        <Text style={styles.txt3}>Leadership Tomorrow"</Text>
+
+
+    </View>
+    <View style={styles.contain}>
+      <TouchableOpacity style={styles.btn}>
+        <Text style={styles.txt4}>Login</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.btn2}>
+        <Text style={styles.txt5}>Sign Up</Text>
+      </TouchableOpacity>
+
     </View>
     </View>
   );
@@ -105,9 +119,67 @@ const styles = StyleSheet.create({
   },
   txt:{
     fontWeight:'bold',
-    fontSize:20
+    fontSize:30,
+    textAlign:"center",
+    paddingTop:30,
+    color:'blue',
+    fontFamily:'MonteCarlo'
 
-  }
+  },
+
+  txt2:{
+    fontSize:20,
+    paddingTop:20,
+    textAlign:'center',
+    fontWeight:'bold'
+  },
+
+  txt3:{
+    fontSize:20,
+    paddingTop:20,
+    textAlign:'center',
+    fontWeight:'bold'
+  },
+  contain:{
+    flexDirection:'row',
+    justifyContent:'space-between',
+  },
+
+  btn:{
+    width:140,
+    height:65,
+    backgroundColor:'blue',
+    marginTop:50,
+    marginLeft:20,
+    borderRadius:10
+  }, 
+  txt4:{
+    fontSize:25,
+    marginLeft: 38,
+    marginTop:15,
+    fontWeight:'bold',
+    color:'#fff'
+  }, 
+
+  txt5:{
+    fontSize:25,
+    marginLeft: 25,
+    marginTop:15,
+    fontWeight:'bold',
+    color:'#fff'
+  }, 
+
+  btn2:{
+    width:140,
+    height:65,
+    backgroundColor:'blue',
+    marginTop:50,
+    marginRight:20,
+    borderRadius:10
+  }, 
+
+
+
 });
 
 export default HomeScreen;
