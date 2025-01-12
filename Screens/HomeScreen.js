@@ -8,7 +8,7 @@ import {
   Text,
   TouchableOpacity
 } from 'react-native';
-import useInterval from './useInterval';  // Ensure this is your updated useInterval hook
+import useInterval from './useInterval';  //  useInterval hook
 
 const MAX_WIDTH = Dimensions.get('screen').width;
 
@@ -82,11 +82,13 @@ const HomeScreen = ({navigation}) => {
       <TouchableOpacity style={styles.btn2}>
         <Text style={styles.txt5}>Sign Up</Text>
       </TouchableOpacity>
-
+            
     </View>
     </View>
   );
 };
+
+  // StyleSheet
 
 const styles = StyleSheet.create({
   image: {
