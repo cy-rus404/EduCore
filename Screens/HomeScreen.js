@@ -8,6 +8,7 @@ import {
   Text,
   TouchableOpacity
 } from 'react-native';
+import { Button } from '@chakra-ui/button'
 import useInterval from './useInterval';  //  useInterval hook
 
 const MAX_WIDTH = Dimensions.get('screen').width;
@@ -75,14 +76,8 @@ const HomeScreen = ({navigation}) => {
 
 
     </View>
-    <View style={styles.contain}>
-      <TouchableOpacity onPress={()=>navigation.navigate('Login')} style={styles.btn}>
-        <Text style={styles.txt4}>Login</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.btn2}>
-        <Text style={styles.txt5}>Sign Up</Text>
-      </TouchableOpacity>
-            
+    <View>
+    <Button colorScheme="green">Button</Button>
     </View>
     </View>
   );
