@@ -5,11 +5,10 @@ import {
   Image,
   StyleSheet,
   View,
-  Text,
-  TouchableOpacity
+  Text
 } from 'react-native';
-import { Button } from '@chakra-ui/button'
-import useInterval from './useInterval';  //  useInterval hook
+import { Provider as PaperProvider, Button } from 'react-native-paper';
+import useInterval from './useInterval'; // useInterval hook
 
 const MAX_WIDTH = Dimensions.get('screen').width;
 
@@ -18,11 +17,9 @@ import image1 from '../assets/images/welcome.jpg';
 import image2 from '../assets/images/success.jpg';
 import image3 from '../assets/images/teaching.jpg';
 
-// Add more imports for other images if needed
+const images = [image1, image2, image3]; // Array of local images
 
-const images = [image1, image2, image3];  // Array of local images
-
-const HomeScreen = ({navigation}) => {
+const HomeScreen = ({ navigation }) => {
   const animation = useRef(new Animated.Value(0));
   const [currentImage, setCurrentImage] = useState(0);
   useInterval(() => handleAnimation(), 5000); // Automatically change images every 5 seconds
@@ -43,47 +40,62 @@ const HomeScreen = ({navigation}) => {
   };
 
   return (
-    <View>
-    <View>
-      <Animated.View
-        style={[
-          styles.container,
-          {
-            transform: [{ translateX: animation.current }],
-          },
-        ]}
-      >
-        {images.map((image, index) => (
-          <Image key={index} source={image} style={styles.image} />
-        ))}
-      </Animated.View>
-      <View style={styles.indicatorContainer}>
-        {images.map((image, index) => (
-          <View
-            key={`${image}_${index}`}
+    <PaperProvider>
+      <View>
+        <View>
+          <Animated.View
             style={[
-              styles.indicator,
-              index === currentImage ? styles.activeIndicator : undefined,
+              styles.container,
+              {
+                transform: [{ translateX: animation.current }],
+              },
             ]}
-          />
-        ))}
+          >
+            {images.map((image, index) => (
+              <Image key={index} source={image} style={styles.image} />
+            ))}
+          </Animated.View>
+          <View style={styles.indicatorContainer}>
+            {images.map((image, index) => (
+              <View
+                key={`${image}_${index}`}
+                style={[
+                  styles.indicator,
+                  index === currentImage ? styles.activeIndicator : undefined,
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+        <View>
+          <Text style={styles.txt}>Welcome To EduCore</Text>
+          <Text style={styles.txt2}>"Education Today</Text>
+          <Text style={styles.txt3}>Leadership Tomorrow"</Text>
+
+          {/* Buttons Row */}
+          <View style={styles.buttonRow}>
+            <Button
+              mode="contained"
+              onPress={() => console.log('Sign Up Pressed')}
+              style={styles.paperButton}
+              contentStyle={styles.paperButtonContent}
+            >
+              Sign Up
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => console.log('Sign In Pressed')}
+              style={styles.paperButton}
+              contentStyle={styles.paperButtonContent}
+            >
+              Sign In
+            </Button>
+          </View>
+        </View>
       </View>
-    </View>
-    <View>
-        <Text style={styles.txt}>Welcome To EduCore</Text>
-        <Text style={styles.txt2}>"Education Today</Text>
-        <Text style={styles.txt3}>Leadership Tomorrow"</Text>
-
-
-    </View>
-    <View>
-    <Button colorScheme="green">Button</Button>
-    </View>
-    </View>
+    </PaperProvider>
   );
 };
-
-  // StyleSheet
 
 const styles = StyleSheet.create({
   image: {
@@ -114,69 +126,40 @@ const styles = StyleSheet.create({
   activeIndicator: {
     backgroundColor: 'white',
   },
-  txt:{
-    fontWeight:'bold',
-    fontSize:30,
-    textAlign:"center",
-    paddingTop:30,
-    color:'blue',
-    fontFamily:'MonteCarlo'
-
+  txt: {
+    fontWeight: 'bold',
+    fontSize: 30,
+    textAlign: 'center',
+    paddingTop: 30,
+    color: 'blue',
+    fontFamily: 'MonteCarlo',
   },
-
-  txt2:{
-    fontSize:20,
-    paddingTop:20,
-    textAlign:'center',
-    fontWeight:'bold'
+  txt2: {
+    fontSize: 20,
+    paddingTop: 20,
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
-
-  txt3:{
-    fontSize:20,
-    paddingTop:20,
-    textAlign:'center',
-    fontWeight:'bold'
+  txt3: {
+    fontSize: 20,
+    paddingTop: 20,
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
-  contain:{
-    flexDirection:'row',
-    justifyContent:'space-between',
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    marginTop: 30,
+    paddingHorizontal: 20,
   },
-
-  btn:{
-    width:140,
-    height:65,
-    backgroundColor:'blue',
-    marginTop:50,
-    marginLeft:20,
-    borderRadius:10
-  }, 
-  txt4:{
-    fontSize:25,
-    marginLeft: 38,
-    marginTop:15,
-    fontWeight:'bold',
-    color:'#fff'
-  }, 
-
-  txt5:{
-    fontSize:25,
-    marginLeft: 25,
-    marginTop:15,
-    fontWeight:'bold',
-    color:'#fff'
-  }, 
-
-  btn2:{
-    width:140,
-    height:65,
-    backgroundColor:'blue',
-    marginTop:50,
-    marginRight:20,
-    borderRadius:10
-  }, 
-
-
-
+  paperButton: {
+    flex: 1,
+    marginHorizontal: 10,
+    borderRadius: 10,
+  },
+  paperButtonContent: {
+    height: 50,
+  },
 });
 
 export default HomeScreen;
