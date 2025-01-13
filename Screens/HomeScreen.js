@@ -10,7 +10,7 @@ import {
 import { Provider as PaperProvider, Button } from 'react-native-paper';
 import useInterval from './useInterval'; // useInterval hook
 
-const MAX_WIDTH = Dimensions.get('screen').width;
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Import local images
 import image1 from '../assets/images/welcome.jpg';
@@ -32,7 +32,7 @@ const HomeScreen = ({ navigation }) => {
     }
 
     Animated.spring(animation.current, {
-      toValue: -(MAX_WIDTH * newCurrentImage),
+      toValue: -(SCREEN_WIDTH * newCurrentImage),
       useNativeDriver: true,
     }).start();
 
@@ -41,7 +41,7 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <PaperProvider>
-      <View>
+      <View style={styles.screen}>
         <View>
           <Animated.View
             style={[
@@ -67,7 +67,7 @@ const HomeScreen = ({ navigation }) => {
             ))}
           </View>
         </View>
-        <View>
+        <View style={styles.textContainer}>
           <Text style={styles.txt}>Welcome To EduCore</Text>
           <Text style={styles.txt2}>"Education Today</Text>
           <Text style={styles.txt3}>Leadership Tomorrow"</Text>
@@ -76,9 +76,9 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.buttonRow}>
             <Button
               mode="contained"
-              onPress={() => console.log('Sign Up Pressed')}
+              onPress={() => navigation.navigate('Login')}
               style={styles.paperButton}
-              contentStyle={styles.paperButtonContent}
+              contentStyle={styles.paperButtonContent} buttonColor='blue'
             >
               Sign Up
             </Button>
@@ -98,9 +98,14 @@ const HomeScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   image: {
-    height: 500,
-    width: MAX_WIDTH,
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT * 0.5, // 50% of the screen height
+    resizeMode: 'cover',
   },
   container: {
     flexDirection: 'row',
@@ -110,55 +115,58 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    width: MAX_WIDTH,
+    width: SCREEN_WIDTH,
     bottom: 10,
     zIndex: 2,
   },
   indicator: {
-    width: 15,
-    height: 15,
-    borderRadius: 7.5,
+    width: SCREEN_WIDTH * 0.03, // 3% of screen width
+    height: SCREEN_WIDTH * 0.03,
+    borderRadius: SCREEN_WIDTH * 0.015,
     borderColor: 'white',
     borderWidth: 1,
-    marginHorizontal: 10,
-    marginBottom: 10,
+    marginHorizontal: 5,
   },
   activeIndicator: {
     backgroundColor: 'white',
   },
+  textContainer: {
+    paddingHorizontal: SCREEN_WIDTH * 0.05, // 5% of screen width
+    alignItems: 'center',
+    marginTop: SCREEN_HEIGHT * 0.03, // 3% of screen height
+  },
   txt: {
     fontWeight: 'bold',
-    fontSize: 30,
+    fontSize: SCREEN_WIDTH * 0.08, // 8% of screen width
     textAlign: 'center',
-    paddingTop: 30,
     color: 'blue',
     fontFamily: 'MonteCarlo',
   },
   txt2: {
-    fontSize: 20,
-    paddingTop: 20,
+    fontSize: SCREEN_WIDTH * 0.05, // 5% of screen width
+    marginTop: SCREEN_HEIGHT * 0.02, // 2% of screen height
     textAlign: 'center',
     fontWeight: 'bold',
   },
   txt3: {
-    fontSize: 20,
-    paddingTop: 20,
+    fontSize: SCREEN_WIDTH * 0.05, // 5% of screen width
+    marginTop: SCREEN_HEIGHT * 0.01, // 1% of screen height
     textAlign: 'center',
     fontWeight: 'bold',
   },
   buttonRow: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    marginTop: 30,
-    paddingHorizontal: 20,
+    justifyContent: 'space-between',
+    marginTop: SCREEN_HEIGHT * 0.2, // 20% of screen height
+    width: '100%',
   },
   paperButton: {
     flex: 1,
-    marginHorizontal: 10,
-    borderRadius: 10,
+    marginHorizontal: SCREEN_WIDTH * 0.02, // 2% of screen width
+    borderRadius: SCREEN_WIDTH * 0.02, // 2% of screen width
   },
   paperButtonContent: {
-    height: 50,
+    height: SCREEN_HEIGHT * 0.07, // 7% of screen height
   },
 });
 
