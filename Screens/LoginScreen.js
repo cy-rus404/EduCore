@@ -16,7 +16,6 @@ const firebaseConfig = {
   
 
 
-
 const app = initializeApp(firebaseConfig);
 
 const AuthScreen = ({ email, setEmail, password, setPassword, isLogin, setIsLogin, handleAuthentication }) => {
