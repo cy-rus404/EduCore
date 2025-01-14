@@ -1,11 +1,11 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { SafeAreaView, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 
 const AdminDashboard = () => {
   return (
-    <View>
+    <SafeAreaView>
       <Text>AdminDashboard</Text>
-    </View>
+    </SafeAreaView>
   )
 }
 
