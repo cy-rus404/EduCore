@@ -10,6 +10,8 @@ import HomeScreen from './Screens/HomeScreen';
 import LoginScreen from './Screens/LoginScreen';
 import AdminDashboard from './Screens/AdminDashboard';
 
+
+
 const firebaseConfig = {
   apiKey: "AIzaSyAaqh3l_22E21TyxJcKwqo6QGPHvZgpEu4",
   authDomain: "educore-1f72e.firebaseapp.com",
@@ -59,7 +61,7 @@ export default function App() {
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Admin" component={AdminDashboard} />
+        <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
 
         {user ? (
           <Stack.Screen name="Authenticated">

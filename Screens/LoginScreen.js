@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from '@firebase/auth';
 import { Picker } from '@react-native-picker/picker';
 import { initializeApp } from '@firebase/app';
@@ -22,60 +22,45 @@ const ADMIN_EMAIL = 'admin@admin.com'; // Predefined admin email for authenticat
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLogin, setIsLogin] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [role, setRole] = useState('student'); // Default role: student
+  const [isLoading, setIsLoading] = useState(false); // Track loading state
 
   const handleAuthentication = async () => {
     setErrorMessage(''); // Reset error message
+    setIsLoading(true); // Show loader when processing authentication
+
     try {
-      if (isLogin) {
-        // Sign in
-        await signInWithEmailAndPassword(auth, email, password);
-        console.log('User signed in successfully!');
-        
-        // After successful login, navigate based on role
-        if (role === 'admin') {
-          // Validate that the email matches the predefined admin email
-          if (email !== ADMIN_EMAIL) {
-            setErrorMessage('This is not the correct admin email.');
-            return;
-          }
-          navigation.navigate('AdminDashboard'); // Navigate to Admin dashboard
-        } else if (role === 'teacher') {
-          navigation.navigate('TeacherDashboard'); // Navigate to Teacher dashboard
-        } else {
-          navigation.navigate('StudentDashboard'); // Navigate to Student dashboard
+      // Sign in
+      await signInWithEmailAndPassword(auth, email, password);
+      console.log('User signed in successfully!');
+      
+      // After successful login, navigate based on role
+      if (role === 'admin') {
+        // Validate that the email matches the predefined admin email
+        if (email !== ADMIN_EMAIL) {
+          setErrorMessage('This is not the correct admin email.');
+          setIsLoading(false); // Hide loader
+          return;
         }
+        navigation.navigate('AdminDashboard'); // Navigate to Admin dashboard
+      } else if (role === 'teacher') {
+        navigation.navigate('TeacherDashboard'); // Navigate to Teacher dashboard
       } else {
-        // Sign up
-        if (role === 'admin') {
-          setErrorMessage('Admin account cannot be created from this app.');
-          return; // Prevent admin account creation
-        }
-
-        await createUserWithEmailAndPassword(auth, email, password);
-        console.log('User created successfully!');
-
-        // Navigate based on role after signup
-        if (role === 'admin') {
-          navigation.navigate('AdminDashboard');
-        } else if (role === 'teacher') {
-          navigation.navigate('TeacherDashboard');
-        } else {
-          navigation.navigate('StudentDashboard');
-        }
+        navigation.navigate('StudentDashboard'); // Navigate to Student dashboard
       }
     } catch (error) {
       console.error('Authentication error:', error.message);
       setErrorMessage('Authentication failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false); // Hide loader after authentication process
     }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.authContainer}>
-        <Text style={styles.title}>{isLogin ? 'Sign In' : 'Sign Up'}</Text>
+        <Text style={styles.title}>Sign In</Text>
 
         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
@@ -110,14 +95,15 @@ const LoginScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.buttonContainer}>
-          <Button title={isLogin ? 'Sign In' : 'Sign Up'} onPress={handleAuthentication} color="#3498db" />
+          <Button
+            title="Sign In"
+            onPress={handleAuthentication}
+            color="#3498db"
+          />
         </View>
 
-        <View style={styles.bottomContainer}>
-          <Text style={styles.toggleText} onPress={() => setIsLogin(!isLogin)}>
-            {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Sign In'}
-          </Text>
-        </View>
+        {/* Loading Spinner */}
+        {isLoading && <ActivityIndicator size="large" color="#3498db" style={styles.loader} />}
       </View>
     </ScrollView>
   );
@@ -168,20 +154,14 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginBottom: 16,
   },
-  toggleText: {
-    color: '#3498db',
-    textAlign: 'center',
-    marginTop: 16,
-    fontSize: 16,
-  },
-  bottomContainer: {
-    marginTop: 20,
-  },
   errorText: {
     color: '#e74c3c',
     marginBottom: 16,
     textAlign: 'center',
     fontSize: 16,
+  },
+  loader: {
+    marginTop: 20,
   },
 });
 

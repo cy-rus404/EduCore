@@ -72,23 +72,16 @@ const HomeScreen = ({ navigation }) => {
           <Text style={styles.txt2}>"Education Today</Text>
           <Text style={styles.txt3}>Leadership Tomorrow"</Text>
 
-          {/* Buttons Row */}
+          {/* Continue Button */}
           <View style={styles.buttonRow}>
             <Button
               mode="contained"
-              onPress={() => navigation.navigate('Login')}
-              style={styles.paperButton}
-              contentStyle={styles.paperButtonContent} buttonColor='blue'
-            >
-              Sign Up
-            </Button>
-            <Button
-              mode="contained"
-              onPress={() => console.log('Sign In Pressed')}
+              onPress={() => navigation.navigate('Login')} // Navigate to Login screen
               style={styles.paperButton}
               contentStyle={styles.paperButtonContent}
+              buttonColor='blue'
             >
-              Sign In
+              Continue
             </Button>
           </View>
         </View>
@@ -156,7 +149,7 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     marginTop: SCREEN_HEIGHT * 0.2, // 20% of screen height
     width: '100%',
   },
