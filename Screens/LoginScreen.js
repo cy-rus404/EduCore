@@ -1,175 +1,10 @@
-// import React, { useState, useEffect } from 'react';
-// import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-native';
-// import { initializeApp } from '@firebase/app';
-// import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from '@firebase/auth';
-
-
-// const firebaseConfig = {
-//     apiKey: "AIzaSyAaqh3l_22E21TyxJcKwqo6QGPHvZgpEu4",
-//     authDomain: "educore-1f72e.firebaseapp.com",
-//     projectId: "educore-1f72e",
-//     storageBucket: "educore-1f72e.firebasestorage.app",
-//     messagingSenderId: "122206275781",
-//     appId: "1:122206275781:web:9bf7c9165dbd6ec11208ac"
-//   };
-  
-  
-
-
-// const app = initializeApp(firebaseConfig);
-
-// const AuthScreen = ({ email, setEmail, password, setPassword, isLogin, setIsLogin, handleAuthentication }) => {
-//   return (
-//     <View style={styles.authContainer}>
-//        <Text style={styles.title}>{isLogin ? 'Sign In' : 'Sign Up'}</Text>
-
-//        <TextInput
-//         style={styles.input}
-//         value={email}
-//         onChangeText={setEmail}
-//         placeholder="Email"
-//         autoCapitalize="none"
-//       />
-//       <TextInput
-//         style={styles.input}
-//         value={password}
-//         onChangeText={setPassword}
-//         placeholder="Password"
-//         secureTextEntry
-//       />
-//       <View style={styles.buttonContainer}>
-//         <Button title={isLogin ? 'Sign In' : 'Sign Up'} onPress={handleAuthentication} color="#3498db" />
-//       </View>
-
-//       <View style={styles.bottomContainer}>
-//         <Text style={styles.toggleText} onPress={() => setIsLogin(!isLogin)}>
-//           {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Sign In'}
-//         </Text>
-//       </View>
-//     </View>
-//   );
-// }
-
-
-// const AuthenticatedScreen = ({ user, handleAuthentication }) => {
-//   return (
-//     <View style={styles.authContainer}>
-//       <Text style={styles.title}>WELCOME</Text>
-//       <Text style={styles.emailText}>{user.email}</Text>
-//       <Button title="Logout" onPress={handleAuthentication} color="#e74c3c" />
-//     </View>
-//   );
-// };
-// export default App = () => {
-//   const [email, setEmail] = useState('');
-//   const [password, setPassword] = useState('');
-//   const [user, setUser] = useState(null); 
-//   const [isLogin, setIsLogin] = useState(true);
-
-//   const auth = getAuth(app);
-//   useEffect(() => {
-//     const unsubscribe = onAuthStateChanged(auth, (user) => {
-//       setUser(user);
-//     });
-
-//     return () => unsubscribe();
-//   }, [auth]);
-
-  
-//   const handleAuthentication = async () => {
-//     try {
-//       if (user) {
-//         // If user is already authenticated, log out
-//         console.log('User logged out successfully!');
-//         await signOut(auth);
-//       } else {
-//         // Sign in or sign up
-//         if (isLogin) {
-//           // Sign in
-//           await signInWithEmailAndPassword(auth, email, password);
-//           console.log('User signed in successfully!');
-//         } else {
-//           // Sign up
-//           await createUserWithEmailAndPassword(auth, email, password);
-//           console.log('User created successfully!');
-//         }
-//       }
-//     } catch (error) {
-//       console.error('Authentication error:', error.message);
-//     }
-//   };
-
-//   return (
-//     <ScrollView contentContainerStyle={styles.container}>
-//       {user ? (
-//         // Show user's email if user is authenticated
-//         <AuthenticatedScreen user={user} handleAuthentication={handleAuthentication} />
-//       ) : (
-//         // Show sign-in or sign-up form if user is not authenticated
-//         <AuthScreen
-//           email={email}
-//           setEmail={setEmail}
-//           password={password}
-//           setPassword={setPassword}
-//           isLogin={isLogin}
-//           setIsLogin={setIsLogin}
-//           handleAuthentication={handleAuthentication}
-//         />
-//       )}
-//     </ScrollView>
-//   );
-// }
-// const styles = StyleSheet.create({
-//   container: {
-//     flexGrow: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     padding: 16,
-//     backgroundColor: '#87ceeb',
-//   },
-//   authContainer: {
-//     width: '80%',
-//     maxWidth: 400,
-//     backgroundColor: '#fff',
-//     padding: 16,
-//     borderRadius: 8,
-//     elevation: 3,
-//   },
-//   title: {
-//     fontSize: 24,
-//     marginBottom: 16,
-//     textAlign: 'center',
-//   },
-//   input: {
-//     height: 40,
-//     borderColor: '#ddd',
-//     borderWidth: 1,
-//     marginBottom: 16,
-//     padding: 8,
-//     borderRadius: 4,
-//   },
-//   buttonContainer: {
-//     marginBottom: 16,
-//   },
-//   toggleText: {
-//     color: '#3498db',
-//     textAlign: 'center',
-//   },
-//   bottomContainer: {
-//     marginTop: 20,
-//   },
-//   emailText: {
-//     fontSize: 18,
-//     textAlign: 'center',
-//     marginBottom: 20,
-//   },
-// });
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-native';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from '@firebase/auth';
+import { Picker } from '@react-native-picker/picker';
 import { initializeApp } from '@firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from '@firebase/auth';
 
+// Firebase config (replace with your own config)
 const firebaseConfig = {
   apiKey: "AIzaSyAaqh3l_22E21TyxJcKwqo6QGPHvZgpEu4",
   authDomain: "educore-1f72e.firebaseapp.com",
@@ -180,116 +15,110 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-const AuthScreen = ({ email, setEmail, password, setPassword, isLogin, setIsLogin, handleAuthentication, errorMessage }) => {
-  return (
-    <View style={styles.authContainer}>
-      <Text style={styles.title}>{isLogin ? 'Sign In' : 'Sign Up'}</Text>
+const ADMIN_EMAIL = 'admin@admin.com'; // Predefined admin email for authentication
 
-      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-
-      <TextInput
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        placeholder="Email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-      <TextInput
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Password"
-        secureTextEntry
-      />
-      <View style={styles.buttonContainer}>
-        <Button title={isLogin ? 'Sign In' : 'Sign Up'} onPress={handleAuthentication} color="#3498db" />
-      </View>
-
-      <View style={styles.bottomContainer}>
-        <Text style={styles.toggleText} onPress={() => setIsLogin(!isLogin)}>
-          {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Sign In'}
-        </Text>
-      </View>
-    </View>
-  );
-};
-
-const AuthenticatedScreen = ({ user, handleAuthentication }) => {
-  return (
-    <View style={styles.authContainer}>
-      <Text style={styles.title}>WELCOME</Text>
-      <Text style={styles.emailText}>{user.email}</Text>
-      <Button title="Logout" onPress={handleAuthentication} color="#e74c3c" />
-    </View>
-  );
-};
-
-export default App = () => {
+const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [user, setUser] = useState(null);
   const [isLogin, setIsLogin] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-
-  const auth = getAuth(app);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-    });
-
-    return () => unsubscribe();
-  }, [auth]);
+  const [role, setRole] = useState('student'); // Default role: student
 
   const handleAuthentication = async () => {
     setErrorMessage(''); // Reset error message
     try {
-      if (user) {
-        // If user is already authenticated, log out
-        console.log('User logged out successfully!');
-        await signOut(auth);
-      } else {
-        // Sign in or sign up
-        if (isLogin) {
-          // Sign in
-          await signInWithEmailAndPassword(auth, email, password);
-          console.log('User signed in successfully!');
+      if (isLogin) {
+        // Sign in
+        await signInWithEmailAndPassword(auth, email, password);
+        console.log('User signed in successfully!');
+        
+        // After successful login, navigate based on role
+        if (role === 'admin') {
+          // Validate that the email matches the predefined admin email
+          if (email !== ADMIN_EMAIL) {
+            setErrorMessage('This is not the correct admin email.');
+            return;
+          }
+          navigation.navigate('AdminDashboard'); // Navigate to Admin dashboard
+        } else if (role === 'teacher') {
+          navigation.navigate('TeacherDashboard'); // Navigate to Teacher dashboard
         } else {
-          // Sign up
-          await createUserWithEmailAndPassword(auth, email, password);
-          console.log('User created successfully!');
+          navigation.navigate('StudentDashboard'); // Navigate to Student dashboard
+        }
+      } else {
+        // Sign up
+        if (role === 'admin') {
+          setErrorMessage('Admin account cannot be created from this app.');
+          return; // Prevent admin account creation
+        }
+
+        await createUserWithEmailAndPassword(auth, email, password);
+        console.log('User created successfully!');
+
+        // Navigate based on role after signup
+        if (role === 'admin') {
+          navigation.navigate('AdminDashboard');
+        } else if (role === 'teacher') {
+          navigation.navigate('TeacherDashboard');
+        } else {
+          navigation.navigate('StudentDashboard');
         }
       }
     } catch (error) {
       console.error('Authentication error:', error.message);
-      setErrorMessage(
-        error.message.includes('wrong-password')
-          ? 'Incorrect password. Please try again.'
-          : 'Authentication failed. Please check your credentials.'
-      );
+      setErrorMessage('Authentication failed. Please check your credentials.');
     }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {user ? (
-        // Show user's email if user is authenticated
-        <AuthenticatedScreen user={user} handleAuthentication={handleAuthentication} />
-      ) : (
-        // Show sign-in or sign-up form if user is not authenticated
-        <AuthScreen
-          email={email}
-          setEmail={setEmail}
-          password={password}
-          setPassword={setPassword}
-          isLogin={isLogin}
-          setIsLogin={setIsLogin}
-          handleAuthentication={handleAuthentication}
-          errorMessage={errorMessage}
+      <View style={styles.authContainer}>
+        <Text style={styles.title}>{isLogin ? 'Sign In' : 'Sign Up'}</Text>
+
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+        <TextInput
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          placeholder="Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
         />
-      )}
+        <TextInput
+          style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Password"
+          secureTextEntry
+        />
+
+        {/* Role selection */}
+        <View style={styles.roleContainer}>
+          <Text style={styles.roleLabel}>Select Role:</Text>
+          <Picker
+            selectedValue={role}
+            style={styles.picker}
+            onValueChange={(itemValue) => setRole(itemValue)}
+          >
+            <Picker.Item label="Student" value="student" />
+            <Picker.Item label="Teacher" value="teacher" />
+            <Picker.Item label="Admin" value="admin" />
+          </Picker>
+        </View>
+
+        <View style={styles.buttonContainer}>
+          <Button title={isLogin ? 'Sign In' : 'Sign Up'} onPress={handleAuthentication} color="#3498db" />
+        </View>
+
+        <View style={styles.bottomContainer}>
+          <Text style={styles.toggleText} onPress={() => setIsLogin(!isLogin)}>
+            {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Sign In'}
+          </Text>
+        </View>
+      </View>
     </ScrollView>
   );
 };
@@ -300,28 +129,41 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#87ceeb',
+    backgroundColor: '#87ceeb', // Background color
   },
   authContainer: {
-    width: '90%', // Adjusted width for larger box
-    maxWidth: 500, // Set a maximum width
+    width: '90%',
+    maxWidth: 500,
     backgroundColor: '#fff',
-    padding: 24, // Increased padding
+    padding: 24,
     borderRadius: 8,
     elevation: 3,
   },
   title: {
-    fontSize: 28, // Larger font size
+    fontSize: 28,
     marginBottom: 16,
     textAlign: 'center',
   },
   input: {
-    height: 50, // Increased height for input fields
+    height: 50,
     borderColor: '#ddd',
     borderWidth: 1,
     marginBottom: 16,
-    padding: 10, // Increased padding
+    padding: 10,
     borderRadius: 4,
+  },
+  roleContainer: {
+    marginBottom: 20,
+  },
+  roleLabel: {
+    fontSize: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  picker: {
+    height: 100,
+    width: '100%',
+    marginBottom: 50,
   },
   buttonContainer: {
     marginBottom: 16,
@@ -335,15 +177,12 @@ const styles = StyleSheet.create({
   bottomContainer: {
     marginTop: 20,
   },
-  emailText: {
-    fontSize: 20,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
   errorText: {
-    color: '#e74c3c', // Red color for errors
+    color: '#e74c3c',
     marginBottom: 16,
     textAlign: 'center',
     fontSize: 16,
   },
 });
+
+export default LoginScreen;
