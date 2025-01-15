@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from '@firebase/auth';
+import { getAuth, signInWithEmailAndPassword } from '@firebase/auth';
 import { Picker } from '@react-native-picker/picker';
 import { initializeApp } from '@firebase/app';
 
@@ -35,7 +35,7 @@ const LoginScreen = ({ navigation }) => {
       await signInWithEmailAndPassword(auth, email, password);
       console.log('User signed in successfully!');
       
-      // After successful login, navigate based on role
+      // Check for role and validate admin credentials
       if (role === 'admin') {
         // Validate that the email matches the predefined admin email
         if (email !== ADMIN_EMAIL) {
@@ -46,8 +46,10 @@ const LoginScreen = ({ navigation }) => {
         navigation.navigate('AdminDashboard'); // Navigate to Admin dashboard
       } else if (role === 'teacher') {
         navigation.navigate('TeacherDashboard'); // Navigate to Teacher dashboard
-      } else {
+      } else if (role === 'student') {
         navigation.navigate('StudentDashboard'); // Navigate to Student dashboard
+      } else {
+        setErrorMessage('Invalid role selected.');
       }
     } catch (error) {
       console.error('Authentication error:', error.message);

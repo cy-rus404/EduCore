@@ -9,6 +9,7 @@ import SplashScreen from './Screens/SplashScreen';
 import HomeScreen from './Screens/HomeScreen';
 import LoginScreen from './Screens/LoginScreen';
 import AdminDashboard from './Screens/AdminDashboard';
+import StudentDashboard from './Screens/StudentDashboard';
 
 
 
@@ -62,6 +63,8 @@ export default function App() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
+        <Stack.Screen name="StudentDashboard" component={StudentDashboard} />
+
 
         {user ? (
           <Stack.Screen name="Authenticated">
