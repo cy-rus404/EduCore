@@ -4,11 +4,19 @@ import React from 'react'
 const AdminDashboard = () => {
   return (
     <SafeAreaView>
-      <Text>AdminDashboard</Text>
+      <Text style={styles.container}>ADMIN DASHBOARD</Text>
+
     </SafeAreaView>
   )
 }
 
 export default AdminDashboard
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+
+container:{
+    alignContent:'center',
+    
+}
+
+})
