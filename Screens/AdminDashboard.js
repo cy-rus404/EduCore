@@ -4,8 +4,8 @@ import React from 'react'
 const AdminDashboard = () => {
   return (
     <SafeAreaView>
-      <Text style={styles.container}>ADMIN </Text>
-      
+      <Text style={styles.container}>ADMIN DASHBOARD</Text>
+
 
     </SafeAreaView>
   )
