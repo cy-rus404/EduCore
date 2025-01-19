@@ -4,7 +4,7 @@ import React from 'react'
 const AdminDashboard = () => {
   return (
     <SafeAreaView>
-      <Text style={styles.container}>ADMIN DASHBOARD</Text>
+      <Text style={styles.container}> DASHBOARD</Text>
 
 
     </SafeAreaView>
