@@ -62,8 +62,8 @@ export default function App() {
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
-        <Stack.Screen name="StudentDashboard" component={StudentDashboard} />
+        {/* <Stack.Screen name="AdminDashboard" component={AdminDashboard} /> */}
+        {/* <Stack.Screen name="StudentDashboard" component={StudentDashboard} /> */}
 
 
         {user ? (
