@@ -2,6 +2,7 @@ import { SafeAreaView, StyleSheet, Text, View, Image,TextInput, Button, Pressabl
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import React from 'react'
+import ErrorMessage from './ErrorMessage';
 
 const validationSchema = Yup.object().shape({
   email: Yup.string().required().email().label("Email"),
@@ -35,7 +36,7 @@ function LoginScreen(props) {
         textContentType='emailAddress'
       />
 
-      <Text style={{color: 'red', marginLeft:10}}>{errors.email}</Text>
+<ErrorMessage error={errors.email}/>
 
       <TextInput style={styles.input1}
         autoCapitalize='none'
@@ -47,7 +48,7 @@ function LoginScreen(props) {
         textContentType='password'
       
       />
-     <Text style={{color: 'red', marginLeft:10}}>{errors.password}</Text> 
+     <ErrorMessage error={errors.password}/>
 
 <Pressable style={styles.button} onPress={handleSubmit}>
   <Text style={styles.buttonText}>Login</Text>
