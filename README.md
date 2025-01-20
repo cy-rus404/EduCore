@@ -1,4 +1,1 @@
-EDUCORE (IN PROGRESS)
-FEATURES 
-    
 
