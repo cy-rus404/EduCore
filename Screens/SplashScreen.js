@@ -5,7 +5,7 @@ export default function SplashScreen({ navigation }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.replace('Home'); // Navigate to Home after 3 seconds
-    }, 3000);
+    }, 2000);
 
     return () => clearTimeout(timer); // Cleanup timer on component unmount
   }, [navigation]);
@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#87ceeb', // Background color (optional)
+    backgroundColor: '#FF5733', // Background color 
   },
   image: {
     width: 100, 

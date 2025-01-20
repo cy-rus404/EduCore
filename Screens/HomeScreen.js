@@ -79,7 +79,7 @@ const HomeScreen = ({ navigation }) => {
               onPress={() => navigation.navigate('Login')} // Navigate to Login screen
               style={styles.paperButton}
               contentStyle={styles.paperButtonContent}
-              buttonColor='blue'
+              buttonColor='#FF5733'
             >
               Continue
             </Button>
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: SCREEN_WIDTH * 0.08, // 8% of screen width
     textAlign: 'center',
-    color: 'blue',
+    color: '#FF5733',
     fontFamily: 'MonteCarlo',
   },
   txt2: {
