@@ -1,22 +1,27 @@
 import { SafeAreaView, StyleSheet, Text, View, Image,TextInput, Button, Pressable } from 'react-native'
-import React, { useState } from 'react'
+import { Formik } from 'formik';
+import React from 'react'
 
 function LoginScreen(props) {
 
-   const [email,setEmail]= useState();
-   const [password,setPassword]= useState();
   return(
     <SafeAreaView>
       <Image style={styles.logo}
       source={require('../assets/images/logo.png')}
       />
 
-      <TextInput style={styles.input}
+      <Formik
+        initialValues={{email:'', password:''}}
+        onSubmit={values => console.log(values)}
+      >
+        {({ handleChange, handleSubmit }) => (
+          <>
+                <TextInput style={styles.input}
         autoCapitalize='none'
         autoCorrect={false}
         icon='email'
         keyboardType='email-address'
-        onChangeText={text =>setEmail(text)}
+        onChangeText={handleChange("email")}
         placeholder='Email'
         textContentType='emailAddress'
       />
@@ -25,16 +30,27 @@ function LoginScreen(props) {
         autoCapitalize='none'
         autoCorrect={false}
         icon='lock'
-        onChangeText={text =>setPassword(text)}
+        onChangeText={handleChange("password")}
         placeholder='Password'
         secureTextEntry={true}
         textContentType='password'
       
       />
 
-<Pressable style={styles.button} onPress={() => console.log(email, password)}>
+<Pressable style={styles.button} onPress={handleSubmit}>
   <Text style={styles.buttonText}>Login</Text>
 </Pressable>
+
+          
+          </>
+        )}
+
+
+
+      </Formik>
+
+
+
     </SafeAreaView>
 
   )
