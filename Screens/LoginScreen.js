@@ -1,6 +1,14 @@
 import { SafeAreaView, StyleSheet, Text, View, Image,TextInput, Button, Pressable } from 'react-native'
 import { Formik } from 'formik';
+import * as Yup from 'yup';
 import React from 'react'
+
+const validationSchema = Yup.object().shape({
+  email: Yup.string().required().email().label("Email"),
+  password: Yup.string().required().min(4).label("Password"),
+
+});
+
 
 function LoginScreen(props) {
 
@@ -13,8 +21,9 @@ function LoginScreen(props) {
       <Formik
         initialValues={{email:'', password:''}}
         onSubmit={values => console.log(values)}
+        validationSchema={validationSchema}
       >
-        {({ handleChange, handleSubmit }) => (
+        {({ handleChange, handleSubmit, errors }) => (
           <>
                 <TextInput style={styles.input}
         autoCapitalize='none'
@@ -26,6 +35,8 @@ function LoginScreen(props) {
         textContentType='emailAddress'
       />
 
+      <Text style={{color: 'red', marginLeft:10}}>{errors.email}</Text>
+
       <TextInput style={styles.input1}
         autoCapitalize='none'
         autoCorrect={false}
@@ -36,6 +47,7 @@ function LoginScreen(props) {
         textContentType='password'
       
       />
+     <Text style={{color: 'red', marginLeft:10}}>{errors.password}</Text> 
 
 <Pressable style={styles.button} onPress={handleSubmit}>
   <Text style={styles.buttonText}>Login</Text>
