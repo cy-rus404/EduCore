@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 
-export default function ErrorMessage({error}) {
-        if (!error) return null;
+export default function ErrorMessage({error,visible}) {
+    if (!visible || !error) return null;
 
   return (
     <View>
@@ -14,3 +14,5 @@ export default function ErrorMessage({error}) {
 const styles = StyleSheet.create({
     error: {color:'red',marginLeft:10}
 })
+
+
