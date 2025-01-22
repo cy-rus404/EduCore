@@ -22,7 +22,7 @@ const images = [image1, image2, image3]; // Array of local images
 const HomeScreen = ({ navigation }) => {
   const animation = useRef(new Animated.Value(0));
   const [currentImage, setCurrentImage] = useState(0);
-  useInterval(() => handleAnimation(), 3000); // Automatically change images every 5 seconds
+  useInterval(() => handleAnimation(), 2000); // Automatically change images every 5 seconds
 
   const handleAnimation = () => {
     let newCurrentImage = currentImage + 1;

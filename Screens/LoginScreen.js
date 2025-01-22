@@ -1,7 +1,8 @@
-import { SafeAreaView, StyleSheet, Text, View, Image, TextInput, Pressable } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View, Image, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import React, { useState } from 'react';
+import { useNavigation } from '@react-navigation/native'; // Import navigation hook
 import ErrorMessage from './ErrorMessage';
 
 const validationSchema = Yup.object().shape({
@@ -10,7 +11,9 @@ const validationSchema = Yup.object().shape({
 });
 
 function LoginScreen(props) {
+  const navigation = useNavigation(); // Initialize navigation
   const [loginError, setLoginError] = useState('');
+  const [loading, setLoading] = useState(false); // Loader state
 
   return (
     <SafeAreaView>
@@ -25,7 +28,11 @@ function LoginScreen(props) {
           const { email, password } = values;
           if (email === 'sduisaac@gmail.com' && password === 'Lynx2532') {
             setLoginError('');
-            console.log('Login Successful');
+            setLoading(true); // Start loading
+            setTimeout(() => {
+              setLoading(false); // Stop loading after 2 seconds
+              navigation.navigate('AdminDashboard'); // Navigate to AdminDashboard
+            }, 2000);
           } else {
             setLoginError('Incorrect login details');
           }
@@ -60,9 +67,13 @@ function LoginScreen(props) {
 
             {loginError ? <Text style={styles.errorText}>{loginError}</Text> : null}
 
-            <Pressable style={styles.button} onPress={handleSubmit}>
-              <Text style={styles.buttonText}>Login</Text>
-            </Pressable>
+            {loading ? (
+              <ActivityIndicator size="large" color="#FF5733" style={styles.loader} />
+            ) : (
+              <Pressable style={styles.button} onPress={handleSubmit}>
+                <Text style={styles.buttonText}>Login</Text>
+              </Pressable>
+            )}
           </>
         )}
       </Formik>
@@ -116,5 +127,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 10,
     fontWeight: 'bold',
+  },
+  loader: {
+    marginTop: 20,
+    alignSelf: 'center',
   },
 });
