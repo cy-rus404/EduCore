@@ -6,9 +6,12 @@ const AdminDashboard = () => {
     { id: 1, label: 'Students', icon: require('../assets/images/student.png') },
     { id: 2, label: 'Teachers', icon: require('../assets/images/teacher.png') },
     { id: 3, label: 'Classes', icon: require('../assets/images/class.png') },
-    { id: 4, label: 'Calendar', icon: require('../assets/images/logo.png') },
+    { id: 4, label: 'Announcements', icon: require('../assets/images/announcement.png') },
     { id: 5, label: 'Messages', icon: require('../assets/images/message.png') },
     { id: 6, label: 'Settings', icon: require('../assets/images/settings.png') },
+    { id: 7, label: 'Settings', icon: require('../assets/images/settings.png') },
+    { id: 8, label: 'Settings', icon: require('../assets/images/settings.png') },
+
 
   ];
 
@@ -30,10 +33,11 @@ export default AdminDashboard;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    // flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f3f6f4',
+    marginTop:100
   },
   grid: {
     flexDirection: 'row',
