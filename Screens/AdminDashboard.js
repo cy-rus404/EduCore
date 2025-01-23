@@ -6,7 +6,7 @@ const AdminDashboard = () => {
     { id: 1, label: 'Students', icon: require('../assets/images/student.png') },
     { id: 2, label: 'Teachers', icon: require('../assets/images/teacher.png') },
     { id: 3, label: 'Classes', icon: require('../assets/images/class.png') },
-    { id: 4, label: 'Box 4', icon: require('../assets/images/logo.png') },
+    { id: 4, label: 'Calendar', icon: require('../assets/images/logo.png') },
     { id: 5, label: 'Messages', icon: require('../assets/images/message.png') },
     { id: 6, label: 'Settings', icon: require('../assets/images/settings.png') },
 
