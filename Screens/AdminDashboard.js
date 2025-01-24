@@ -1,30 +1,41 @@
-import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Image, TouchableOpacity } from 'react-native';
 import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 
 const AdminDashboard = () => {
-  const boxes = [
-    { id: 1, label: 'Students', icon: require('../assets/images/student.png') },
-    { id: 2, label: 'Teachers', icon: require('../assets/images/teacher.png') },
-    { id: 3, label: 'Classes', icon: require('../assets/images/class.png') },
-    { id: 4, label: 'Announcements', icon: require('../assets/images/announcement.png') },
-    { id: 5, label: 'Messages', icon: require('../assets/images/message.png') },
-    { id: 6, label: 'Settings', icon: require('../assets/images/settings.png') },
-    { id: 7, label: 'Settings', icon: require('../assets/images/settings.png') },
-    { id: 8, label: 'Settings', icon: require('../assets/images/settings.png') },
+  const navigation = useNavigation();
 
-
+  // Sample data for the FlatList
+  const data = [
+    { id: '1', title: 'Students', image: require('../assets/images/student.png'), screen: 'Student' },
+    { id: '2', title: 'Teachers', image: require('../assets/images/teacher.png'), screen: 'Screen2' },
+    { id: '3', title: 'Classes', image: require('../assets/images/class.png'), screen: 'Screen3' },
+    { id: '4', title: 'Announcements', image: require('../assets/images/announcement.png'), screen: 'Screen4' },
+    { id: '5', title: 'Messages', image: require('../assets/images/message.png'), screen: 'Screen5' },
+    { id: '6', title: 'Settings', image: require('../assets/images/settings.png'), screen: 'Screen6' },
   ];
 
+  // Function to render each item in the FlatList
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.container}
+      onPress={() => navigation.navigate(item.screen)} // Navigate to the specified screen
+    >
+      {item.image && <Image source={item.image} style={styles.image} />}
+      <Text style={styles.text}>{item.title}</Text>
+    </TouchableOpacity>
+  );
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.grid}>
-        {boxes.map((box) => (
-          <TouchableOpacity key={box.id} style={styles.box}>
-            <Image source={box.icon} style={styles.icon} />
-            <Text style={styles.boxText}>{box.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+    <SafeAreaView style={{ flex: 1 }}>
+      <FlatList
+        data={data}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.flatListContent}
+        showsVerticalScrollIndicator={false}
+      />
     </SafeAreaView>
   );
 };
@@ -32,36 +43,33 @@ const AdminDashboard = () => {
 export default AdminDashboard;
 
 const styles = StyleSheet.create({
+  flatListContent: {
+    paddingVertical: 20,
+  },
   container: {
-    // flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f3f6f4',
-    marginTop:100
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    width: '90%',
-  },
-  box: {
-    width: '45%', // Ensures two boxes per row with spacing
+    backgroundColor: '#fff',
+    width: 300,
     height: 150,
-    backgroundColor: '#FF5733',
-    marginBottom: 20,
     borderRadius: 20,
+    marginTop: 20,
+    alignSelf: 'center',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5, // For Android shadow
   },
-  icon: {
+  text: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+    marginTop: 10,
+  },
+  image: {
     width: 50,
     height: 50,
-    marginBottom: 10, // Space between icon and text
-  },
-  boxText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
+    marginBottom: 10,
   },
 });

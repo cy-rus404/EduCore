@@ -32,7 +32,7 @@ function LoginScreen(props) {
             setTimeout(() => {
               setLoading(false); // Stop loading after 2 seconds
               navigation.navigate('AdminDashboard'); // Navigate to AdminDashboard
-            }, 2000);
+            }, 100);
           } else {
             setLoginError('Incorrect login details');
           }
