@@ -9,7 +9,7 @@ import SplashScreen from './Screens/SplashScreen';
 import HomeScreen from './Screens/HomeScreen';
 import LoginScreen from './Screens/LoginScreen';
 import AdminDashboard from './Screens/AdminDashboard';
-import StudentDashboard from './Screens/StudentDashboard';
+import Student from './Screens/Student';
 
 
 
@@ -63,7 +63,7 @@ export default function App() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
-        <Stack.Screen name="Student" component={StudentDashboard} />
+        <Stack.Screen name="Student" component={Student} />
 
 
         {user ? (

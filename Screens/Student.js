@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   StyleSheet, 
@@ -15,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 
-const StudentManagementApp = () => {
+const Student = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalVisible, setAddModalVisible] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -353,4 +354,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default StudentManagementApp;
+export default Student;
