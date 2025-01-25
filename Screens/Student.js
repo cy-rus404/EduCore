@@ -41,6 +41,14 @@ const Student = () => {
       class: '11B', 
       image: 'https://via.placeholder.com/150' 
     },
+    { 
+      id: '3', 
+      name: 'Stan Smith', 
+      age: '17', 
+      class: '12B', 
+      image: 'https://via.placeholder.com/150' 
+    },
+
   ]);
 
   const pickImage = async () => {
