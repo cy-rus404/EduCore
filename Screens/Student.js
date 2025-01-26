@@ -209,7 +209,7 @@ const Student = () => {
     <SafeAreaView style={styles.container}>
       <TextInput
         style={styles.searchBar}
-        placeholder="Search for a student by name"
+        placeholder="Search by name"
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
