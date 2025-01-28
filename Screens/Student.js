@@ -7,7 +7,7 @@ import {
   Text, 
   View, 
   TouchableOpacity, 
-  
+  Modal, 
   Image, 
   Button, 
   Platform,
