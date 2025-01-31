@@ -27,7 +27,7 @@ function LoginScreen(props) {
         initialValues={{ email: '', password: '' }}
         onSubmit={(values) => {
           const { email, password } = values;
-          if (email === 'sduisaac@gmail.com' && password === 'Lynx2532') {
+          if (email === 'sduisaac@gmail.com' && password === 'Cyrus') {
             setLoginError('');
             setLoading(true); // Start loading
             setTimeout(() => {
