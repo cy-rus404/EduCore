@@ -29,7 +29,7 @@ const Student = () => {
   const [students, setStudents] = useState([
     { 
       id: '1', 
-      name: 'John Doe', 
+      name: 'Cyrus Doe', 
       age: '18', 
       class: '12A', 
       image: 'https://via.placeholder.com/150' 
