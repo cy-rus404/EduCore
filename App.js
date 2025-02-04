@@ -1,4 +1,3 @@
-// App.js
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -10,8 +9,6 @@ import HomeScreen from './Screens/HomeScreen';
 import LoginScreen from './Screens/LoginScreen';
 import AdminDashboard from './Screens/AdminDashboard';
 import Student from './Screens/Student';
-
-
 
 const firebaseConfig = {
   apiKey: "AIzaSyAaqh3l_22E21TyxJcKwqo6QGPHvZgpEu4",
@@ -64,15 +61,6 @@ export default function App() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
         <Stack.Screen name="Student" component={Student} />
-
-
-        {user ? (
-          <Stack.Screen name="Authenticated">
-            {() => (
-              <AuthenticatedScreen user={user} handleAuthentication={handleAuthentication} />
-            )}
-          </Stack.Screen>
-        ) : null}
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,9 +1,8 @@
-
 import { SafeAreaView, StyleSheet, Text, View, Image, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import React, { useState } from 'react';
-import { useNavigation } from '@react-navigation/native'; // Import navigation hook
+import { useNavigation } from '@react-navigation/native'; 
 import ErrorMessage from './ErrorMessage';
 
 const validationSchema = Yup.object().shape({
@@ -11,10 +10,33 @@ const validationSchema = Yup.object().shape({
   password: Yup.string().required("Password is required").min(4, "Password must be at least 4 characters").label("Password"),
 });
 
+// Default admin credentials
+const adminEmail = 'sduisaac@gmail.com';
+const adminPassword = 'Cyrus';
+
 function LoginScreen(props) {
-  const navigation = useNavigation(); // Initialize navigation
+  const navigation = useNavigation(); 
   const [loginError, setLoginError] = useState('');
-  const [loading, setLoading] = useState(false); // Loader state
+  const [loading, setLoading] = useState(false); 
+
+  const [students, setStudents] = useState([]); // This should ideally come from a global state or context
+
+  const handleLogin = (values) => {
+    const { email, password } = values;
+    const student = students.find(student => student.email === email && student.password === password);
+    
+    // Check against admin credentials
+    if ((email === adminEmail && password === adminPassword) || student) {
+      setLoginError('');
+      setLoading(true); 
+      setTimeout(() => {
+        setLoading(false); 
+        navigation.navigate('AdminDashboard'); 
+      }, 100);
+    } else {
+      setLoginError('Incorrect login details');
+    }
+  };
 
   return (
     <SafeAreaView>
@@ -25,19 +47,7 @@ function LoginScreen(props) {
 
       <Formik
         initialValues={{ email: '', password: '' }}
-        onSubmit={(values) => {
-          const { email, password } = values;
-          if (email === 'sduisaac@gmail.com' && password === 'Cyrus') {
-            setLoginError('');
-            setLoading(true); // Start loading
-            setTimeout(() => {
-              setLoading(false); // Stop loading after 2 seconds
-              navigation.navigate('AdminDashboard'); // Navigate to AdminDashboard
-            }, 100);
-          } else {
-            setLoginError('Incorrect login details');
-          }
-        }}
+        onSubmit={handleLogin}
         validationSchema={validationSchema}
       >
         {({ handleChange, handleSubmit, errors, setFieldTouched, touched }) => (
