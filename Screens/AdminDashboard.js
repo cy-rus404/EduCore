@@ -10,11 +10,6 @@ const AdminDashboard = () => {
           <Text style={styles.txt}>Student</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.container}>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.txt}>Student</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   )
 }
