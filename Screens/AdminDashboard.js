@@ -7,7 +7,7 @@ const AdminDashboard = () => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <TouchableOpacity style={styles.button}>
-          <Text style={styles.txt}>Student</Text>
+          <Text style={styles.txt}>Students</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
