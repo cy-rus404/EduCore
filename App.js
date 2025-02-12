@@ -10,14 +10,14 @@ import LoginScreen from './Screens/LoginScreen';
 import AdminDashboard from './Screens/AdminDashboard';
 import Student from './Screens/Student';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAaqh3l_22E21TyxJcKwqo6QGPHvZgpEu4",
-  authDomain: "educore-1f72e.firebaseapp.com",
-  projectId: "educore-1f72e",
-  storageBucket: "educore-1f72e.firebasestorage.app",
-  messagingSenderId: "122206275781",
-  appId: "1:122206275781:web:9bf7c9165dbd6ec11208ac",
-};
+// const firebaseConfig = {
+//   apiKey: "AIzaSyAaqh3l_22E21TyxJcKwqo6QGPHvZgpEu4",
+//   authDomain: "educore-1f72e.firebaseapp.com",
+//   projectId: "educore-1f72e",
+//   storageBucket: "educore-1f72e.firebasestorage.app",
+//   messagingSenderId: "122206275781",
+//   appId: "1:122206275781:web:9bf7c9165dbd6ec11208ac",
+// };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
