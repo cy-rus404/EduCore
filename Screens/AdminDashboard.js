@@ -18,7 +18,7 @@ export default AdminDashboard
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#f5f5f5', // Light background for contrast
+    backgroundColor: '#f5f5f5', //    
     justifyContent: 'center', // 
     alignItems: 'center',
   },
