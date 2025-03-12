@@ -10,6 +10,8 @@ import LoginScreen from './Screens/LoginScreen';
 import AdminDashboard from './Screens/AdminDashboard';
 import Student from './Screens/Student';
 
+// Will be updated soon
+
 const firebaseConfig = {
   apiKey: "AIzaSyAaqh3l_22E21TyxJcKwqo6QGPHvZgpEu4",
   authDomain: "educore-1f72e.firebaseapp.com",
