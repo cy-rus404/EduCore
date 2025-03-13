@@ -7,7 +7,7 @@ const data = [
   { id: '2', title: 'Teachers', image: require('../assets/images/teacher.jpg'), route: 'Teacher' },
   { id: '3', title: 'Classes', image: require('../assets/images/class.jpg'), route: 'Class' },
   { id: '4', title: 'Messages', image: require('../assets/images/message.jpg'), route: 'Message' },
-  { id: '6', title: 'Informations', image: require('../assets/images/announce.jpg'), route: 'Announcement' },
+  { id: '6', title: 'Information', image: require('../assets/images/announce.jpg'), route: 'Announcement' },
   { id: '5', title: 'Settings', image: require('../assets/images/settings.jpg'), route: 'Settings' },
 
 ];
