@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   TextInput, 
@@ -15,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Student = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,30 +26,31 @@ const Student = () => {
     class: '',
     image: null
   });
-  const [students, setStudents] = useState([
-    { 
-      id: '1', 
-      name: 'Jonh Doe', 
-      age: '18', 
-      class: '12A', 
-      image: 'https://via.placeholder.com/150' 
-    },
-    { 
-      id: '2', 
-      name: 'Jane Smith', 
-      age: '17', 
-      class: '11B', 
-      image: 'https://via.placeholder.com/150' 
-    },
-    { 
-      id: '3', 
-      name: 'Stan Smith', 
-      age: '17', 
-      class: '12B', 
-      image: 'https://via.placeholder.com/150' 
-    },
+  const [students, setStudents] = useState([]);
 
-  ]);
+  // Load data from AsyncStorage on app start
+  useEffect(() => {
+    loadStudents();
+  }, []);
+
+  const loadStudents = async () => {
+    try {
+      const storedStudents = await AsyncStorage.getItem('students');
+      if (storedStudents !== null) {
+        setStudents(JSON.parse(storedStudents));
+      }
+    } catch (error) {
+      console.error('Failed to load students', error);
+    }
+  };
+
+  const saveStudents = async (updatedStudents) => {
+    try {
+      await AsyncStorage.setItem('students', JSON.stringify(updatedStudents));
+    } catch (error) {
+      console.error('Failed to save students', error);
+    }
+  };
 
   const pickImage = async () => {
     if (Platform.OS !== 'web') {
@@ -72,10 +73,6 @@ const Student = () => {
     }
   };
 
-  const filteredData = students.filter(item =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const addStudent = () => {
     if (!newStudent.name || !newStudent.age || !newStudent.class) {
       Alert.alert('Incomplete Information', 'Please fill in all fields');
@@ -83,10 +80,14 @@ const Student = () => {
     }
 
     const student = {
-      id: (students.length + 1).toString(),
+      id: Date.now().toString(),
       ...newStudent
     };
-    setStudents([...students, student]);
+
+    const updatedStudents = [...students, student];
+    setStudents(updatedStudents);
+    saveStudents(updatedStudents);
+
     setAddModalVisible(false);
     setNewStudent({ name: '', age: '', class: '', image: null });
   };
@@ -106,6 +107,7 @@ const Student = () => {
           onPress: () => {
             const updatedStudents = students.filter((student) => student.id !== id);
             setStudents(updatedStudents);
+            saveStudents(updatedStudents);
           },
         },
       ],
@@ -146,6 +148,10 @@ const Student = () => {
     </Modal>
   );
 
+  const filteredData = students.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const renderAddStudentModal = () => (
     <Modal
       visible={isAddModalVisible}
@@ -170,39 +176,32 @@ const Student = () => {
 
           <Button title="Pick an image from camera roll" onPress={pickImage} />
 
-          <View style={styles.formContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter student name"
-              placeholderTextColor="#888"
-              value={newStudent.name}
-              onChangeText={(text) => setNewStudent({ ...newStudent, name: text })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter student age"
-              placeholderTextColor="#888"
-              keyboardType="numeric"
-              value={newStudent.age}
-              onChangeText={(text) => setNewStudent({ ...newStudent, age: text })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter student class"
-              placeholderTextColor="#888"
-              keyboardType="numeric"
-              value={newStudent.class}
-              onChangeText={(text) => setNewStudent({ ...newStudent, class: text })}
-            />
-          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter student name"
+            placeholderTextColor="#888"
+            value={newStudent.name}
+            onChangeText={(text) => setNewStudent({ ...newStudent, name: text })}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter student age"
+            placeholderTextColor="#888"
+            keyboardType="numeric"
+            value={newStudent.age}
+            onChangeText={(text) => setNewStudent({ ...newStudent, age: text })}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter student class"
+            placeholderTextColor="#888"
+            value={newStudent.class}
+            onChangeText={(text) => setNewStudent({ ...newStudent, class: text })}
+          />
 
           <View style={styles.buttonContainer}>
             <Button title="Add" onPress={addStudent} />
-            <Button
-              title="Cancel"
-              onPress={() => setAddModalVisible(false)}
-              color="red"
-            />
+            <Button title="Cancel" onPress={() => setAddModalVisible(false)} color="red" />
           </View>
         </View>
       </View>
@@ -226,10 +225,7 @@ const Student = () => {
             style={styles.studentItem}
             onPress={() => setSelectedStudent(item)}
           >
-            <Image
-              source={{ uri: item.image || 'https://via.placeholder.com/50' }}
-              style={styles.studentListImage}
-            />
+            <Image source={{ uri: item.image }} style={styles.studentListImage} />
             <Text style={styles.studentName}>{item.name}</Text>
           </TouchableOpacity>
         )}
@@ -247,6 +243,7 @@ const Student = () => {
     </SafeAreaView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -333,7 +330,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     fontSize: 16,
-    color:"#000"
+    color: '#000',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -366,5 +363,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 });
+
+
+
+
+
 
 export default Student;
