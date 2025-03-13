@@ -174,12 +174,14 @@ const Student = () => {
             <TextInput
               style={styles.input}
               placeholder="Enter student name"
+              placeholderTextColor="#888"
               value={newStudent.name}
               onChangeText={(text) => setNewStudent({ ...newStudent, name: text })}
             />
             <TextInput
               style={styles.input}
               placeholder="Enter student age"
+              placeholderTextColor="#888"
               keyboardType="numeric"
               value={newStudent.age}
               onChangeText={(text) => setNewStudent({ ...newStudent, age: text })}
@@ -187,6 +189,8 @@ const Student = () => {
             <TextInput
               style={styles.input}
               placeholder="Enter student class"
+              placeholderTextColor="#888"
+              keyboardType="numeric"
               value={newStudent.class}
               onChangeText={(text) => setNewStudent({ ...newStudent, class: text })}
             />
@@ -329,6 +333,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     fontSize: 16,
+    color:"#000"
   },
   buttonContainer: {
     flexDirection: 'row',
