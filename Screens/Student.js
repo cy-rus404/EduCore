@@ -23,8 +23,10 @@ const Student = () => {
   const [newStudent, setNewStudent] = useState({
     name: '',
     age: '',
-    class: '',
-    image: null
+    course: '',
+    image: null,
+    email: '',
+    password:''
   });
   const [students, setStudents] = useState([]);
 
@@ -130,7 +132,7 @@ const Student = () => {
           />
           <Text style={styles.detailText}>Name: {selectedStudent?.name}</Text>
           <Text style={styles.detailText}>Age: {selectedStudent?.age}</Text>
-          <Text style={styles.detailText}>Class: {selectedStudent?.class}</Text>
+          <Text style={styles.detailText}>Course: {selectedStudent?.class}</Text>
 
           <View style={styles.buttonContainer}>
             <Button title="Close" onPress={() => setSelectedStudent(null)} />
@@ -193,7 +195,7 @@ const Student = () => {
           />
           <TextInput
             style={styles.input}
-            placeholder="Enter student class"
+            placeholder="Enter student course"
             placeholderTextColor="#888"
             value={newStudent.class}
             onChangeText={(text) => setNewStudent({ ...newStudent, class: text })}
@@ -370,3 +372,4 @@ const styles = StyleSheet.create({
 
 
 export default Student;
+
