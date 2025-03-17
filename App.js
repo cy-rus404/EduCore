@@ -9,6 +9,7 @@ import HomeScreen from './Screens/HomeScreen';
 import LoginScreen from './Screens/LoginScreen';
 import AdminDashboard from './Screens/AdminDashboard';
 import Student from './Screens/Student';
+import LevelScreen from './Screens/LevelScreen';
 
 // Will be updated soon
 
@@ -63,6 +64,8 @@ export default function App() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
         <Stack.Screen name="Student" component={Student} />
+        <Stack.Screen name="Level" component={LevelScreen} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );
