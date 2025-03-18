@@ -1,14 +1,12 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, Image, TextInput, Alert, Button, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LevelScreen = ({ route, navigation }) => {
-  const { level } = route.params; // Get the current level
+  const { level } = route.params;
   const [students, setStudents] = useState([]);
-  const [allStudents, setAllStudents] = useState([]); // Store all students for saving back to AsyncStorage
+  const [allStudents, setAllStudents] = useState([]);
   const [newStudent, setNewStudent] = useState({ 
     name: '', 
     id: '', 
@@ -20,7 +18,7 @@ const LevelScreen = ({ route, navigation }) => {
   });
   const [isAddModalVisible, setAddModalVisible] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [isEditModalVisible, setEditModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -35,6 +33,7 @@ const LevelScreen = ({ route, navigation }) => {
         const parsedStudents = JSON.parse(storedStudents);
         setAllStudents(parsedStudents);
         setStudents(parsedStudents.filter(student => student.level === level));
+        console.log('Loaded students in LevelScreen:', parsedStudents);
       }
     } catch (error) {
       console.error('Failed to load students', error);
@@ -43,12 +42,15 @@ const LevelScreen = ({ route, navigation }) => {
 
   const saveStudents = async (levelStudents) => {
     try {
-      // Update only the students from this level in the allStudents array
       const updatedAllStudents = allStudents.filter(student => student.level !== level).concat(levelStudents);
       await AsyncStorage.setItem('students', JSON.stringify(updatedAllStudents));
       setAllStudents(updatedAllStudents);
+      console.log('Successfully saved to AsyncStorage:', updatedAllStudents);
+      // Verify the save by immediately reading back
+      const verifyStudents = await AsyncStorage.getItem('students');
+      console.log('Verified AsyncStorage content after save:', JSON.parse(verifyStudents));
     } catch (error) {
-      console.error('Failed to save students', error);
+      console.error('Failed to save students to AsyncStorage', error);
     }
   };
 
@@ -58,7 +60,6 @@ const LevelScreen = ({ route, navigation }) => {
       return;
     }
 
-    // Check if email already exists
     if (allStudents.some(student => student.email === newStudent.email)) {
       Alert.alert('Email Already Exists', 'Please use a different email address');
       return;
@@ -66,30 +67,39 @@ const LevelScreen = ({ route, navigation }) => {
 
     const student = {
       id: Date.now().toString(),
-      name: newStudent.name,
-      studentId: newStudent.id,
-      age: newStudent.age,
-      course: newStudent.course,
-      image: newStudent.image,
-      email: newStudent.email,
-      password: newStudent.password,
-      level,
+      name: newStudent.name || '',
+      studentId: newStudent.id || '',
+      age: newStudent.age || '',
+      course: newStudent.course || '',
+      image: newStudent.image || '',
+      email: newStudent.email || '',
+      password: newStudent.password || '',
+      level: level || '',
     };
 
     const updatedStudents = [...students, student];
     setStudents(updatedStudents);
     saveStudents(updatedStudents);
+    
+    console.log('Saved students:', updatedStudents);
 
     setAddModalVisible(false);
     setNewStudent({ name: '', id: '', age: '', course: '', image: null, email: '', password: '' });
   };
 
   const updateStudent = () => {
-    if (!editingStudent) return;
+    if (!editingStudent) {
+      console.log('No student being edited');
+      return;
+    }
+
+    console.log('Updating student:', editingStudent);
 
     const updatedStudents = students.map(student => 
-      student.id === editingStudent.id ? editingStudent : student
+      student.id === editingStudent.id ? { ...student, ...editingStudent } : student
     );
+
+    console.log('Updated students array:', updatedStudents);
 
     setStudents(updatedStudents);
     saveStudents(updatedStudents);
@@ -148,11 +158,15 @@ const LevelScreen = ({ route, navigation }) => {
           <Text style={styles.detailText}>Password: {selectedStudent?.password}</Text>
 
           <View style={styles.buttonContainer}>
-            <Button title="Edit" onPress={() => {
-              setSelectedStudent(null);
-              setEditingStudent(selectedStudent);
-              setIsEditModalVisible(true);
-            }} />
+            <Button 
+              title="Edit" 
+              onPress={() => {
+                console.log('Opening edit modal for:', selectedStudent);
+                setSelectedStudent(null);
+                setEditingStudent({ ...selectedStudent });
+                setIsEditModalVisible(true);
+              }} 
+            />
             <Button title="Close" onPress={() => setSelectedStudent(null)} />
             <Button title="Delete" onPress={() => deleteStudent(selectedStudent.id)} color="red" />
           </View>
@@ -282,7 +296,7 @@ const LevelScreen = ({ route, navigation }) => {
                   placeholderTextColor="#888"
                   value={newStudent.password}
                   onChangeText={(text) => setNewStudent({ ...newStudent, password: text })}
-                  secureTextEntry={false} // Set to true if you want to hide the password
+                  secureTextEntry={false}
                 />
 
                 <View style={styles.buttonContainer}>
@@ -318,21 +332,21 @@ const LevelScreen = ({ route, navigation }) => {
                   style={styles.input}
                   placeholder="Enter student name"
                   placeholderTextColor="#888"
-                  value={editingStudent?.name}
+                  value={editingStudent?.name || ''}
                   onChangeText={(text) => setEditingStudent({ ...editingStudent, name: text })}
                 />
                 <TextInput
                   style={styles.input}
                   placeholder="Enter student ID"
                   placeholderTextColor="#888"
-                  value={editingStudent?.studentId}
+                  value={editingStudent?.studentId || ''}
                   onChangeText={(text) => setEditingStudent({ ...editingStudent, studentId: text })}
                 />
                 <TextInput
                   style={styles.input}
                   placeholder="Enter student age"
                   placeholderTextColor="#888"
-                  value={editingStudent?.age}
+                  value={editingStudent?.age || ''}
                   onChangeText={(text) => setEditingStudent({ ...editingStudent, age: text })}
                   keyboardType="numeric"
                 />
@@ -340,14 +354,14 @@ const LevelScreen = ({ route, navigation }) => {
                   style={styles.input}
                   placeholder="Enter student course"
                   placeholderTextColor="#888"
-                  value={editingStudent?.course}
+                  value={editingStudent?.course || ''}
                   onChangeText={(text) => setEditingStudent({ ...editingStudent, course: text })}
                 />
                 <TextInput
                   style={styles.input}
                   placeholder="Enter student email"
                   placeholderTextColor="#888"
-                  value={editingStudent?.email}
+                  value={editingStudent?.email || ''}
                   onChangeText={(text) => setEditingStudent({ ...editingStudent, email: text })}
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -356,9 +370,9 @@ const LevelScreen = ({ route, navigation }) => {
                   style={styles.input}
                   placeholder="Assign password"
                   placeholderTextColor="#888"
-                  value={editingStudent?.password}
+                  value={editingStudent?.password || ''}
                   onChangeText={(text) => setEditingStudent({ ...editingStudent, password: text })}
-                  secureTextEntry={false} // Set to true if you want to hide the password
+                  secureTextEntry={false}
                 />
 
                 <View style={styles.buttonContainer}>

@@ -2,7 +2,7 @@ import { SafeAreaView, StyleSheet, Text, View, Image, TextInput, Pressable, Acti
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import React, { useState, useEffect } from 'react';
-import { useNavigation } from '@react-navigation/native'; 
+import { useNavigation, useFocusEffect } from '@react-navigation/native'; 
 import ErrorMessage from './ErrorMessage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -11,11 +11,9 @@ const validationSchema = Yup.object().shape({
   password: Yup.string().required("Password is required").min(4, "Password must be at least 4 characters").label("Password"),
 });
 
-// Default admin credentials
 const adminEmail = 'sduisaac@gmail.com';
 const adminPassword = 'Cyrus';
 
-// Default teacher credentials (you can add more or load from storage)
 const teacherCredentials = [
   { email: 'teacher1@example.com', password: 'teacher1', name: 'John Doe' },
   { email: 'teacher2@example.com', password: 'teacher2', name: 'Jane Smith' }
@@ -27,30 +25,37 @@ function LoginScreen(props) {
   const [loading, setLoading] = useState(false);
   const [students, setStudents] = useState([]);
 
-  useEffect(() => {
-    const loadStudents = async () => {
-      try {
-        const storedStudents = await AsyncStorage.getItem('students');
-        if (storedStudents !== null) {
-          const parsedStudents = JSON.parse(storedStudents);
-          const validStudents = parsedStudents.filter(s => 
-            s && typeof s.email === 'string' && typeof s.password === 'string'
-          );
-          setStudents(validStudents);
-          console.log('Loaded students in LoginScreen:', validStudents);
-          if (parsedStudents.length !== validStudents.length) {
-            console.warn('Filtered out invalid students:', parsedStudents.filter(s => !validStudents.includes(s)));
-          }
-        } else {
-          console.log('No students found in AsyncStorage');
+  const loadStudents = async () => {
+    try {
+      const storedStudents = await AsyncStorage.getItem('students');
+      if (storedStudents !== null) {
+        const parsedStudents = JSON.parse(storedStudents);
+        const validStudents = parsedStudents.filter(s => 
+          s && typeof s.email === 'string' && typeof s.password === 'string'
+        );
+        setStudents(validStudents);
+        console.log('Loaded students in LoginScreen:', validStudents);
+        if (parsedStudents.length !== validStudents.length) {
+          console.warn('Filtered out invalid students:', parsedStudents.filter(s => !validStudents.includes(s)));
         }
-      } catch (error) {
-        console.error('Failed to load students', error);
+      } else {
+        console.log('No students found in AsyncStorage');
       }
-    };
-    
+    } catch (error) {
+      console.error('Failed to load students', error);
+    }
+  };
+
+  // Load students on mount and whenever screen comes into focus
+  useEffect(() => {
     loadStudents();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadStudents(); // Reload data every time the screen is focused
+    }, [])
+  );
 
   const handleLogin = (values) => {
     const { email, password } = values;
@@ -96,7 +101,7 @@ function LoginScreen(props) {
           studentId: student.studentId, 
           studentName: student.name, 
           level: student.level,
-          image: student.image // Add image to navigation params
+          image: student.image
         });
       }, 100);
       return;

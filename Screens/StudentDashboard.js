@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 
 const StudentDashboard = ({ route, navigation }) => {
-  const { studentName, studentId, level, image } = route.params; // Add image to destructured params
+  const { studentName, studentId, level, image } = route.params;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -15,7 +15,7 @@ const StudentDashboard = ({ route, navigation }) => {
             />
           ) : (
             <Image 
-              source={{ uri: 'https://via.placeholder.com/50' }} // Fallback image if none provided
+              source={{ uri: 'https://via.placeholder.com/50' }} 
               style={styles.profileImage} 
             />
           )}
@@ -28,7 +28,7 @@ const StudentDashboard = ({ route, navigation }) => {
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>Your Information</Text>
+          <Text style={styles.infoTitle}>Student Profile</Text>
           <Text style={styles.infoText}>Student ID: {studentId}</Text>
           <Text style={styles.infoText}>Level: {level}</Text>
         </View>
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#FF5733',
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 30,
   },
   headerContent: {
     flexDirection: 'row',
