@@ -166,6 +166,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     position: 'relative',
+    width:350,
+    alignSelf:'center'
   },
   messageText: {
     fontSize: 16,
@@ -187,6 +189,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF3333',
     padding: 5,
     borderRadius: 5,
+    
   },
   deleteButtonText: {
     color: '#fff',
@@ -226,6 +229,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
+    
   },
   noMessagesText: {
     fontSize: 16,
@@ -239,6 +243,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 20,
+    width:350,
+    alignSelf:'center'
+
   },
   backButtonText: {
     fontSize: 16,

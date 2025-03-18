@@ -118,7 +118,7 @@ function LoginScreen(props) {
         source={require('../assets/images/logo.png')}
       />
       
-      <Text style={styles.welcomeText}>Welcome Back</Text>
+      <Text style={styles.welcomeText}>Welcome</Text>
       <Text style={styles.subtitleText}>Sign in to continue</Text>
 
       <Formik
@@ -202,6 +202,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 15,
     fontSize: 16,
+    width:350,
+    alignSelf:'center'
+
   },
   button: {
     backgroundColor: '#FF5733',
@@ -210,6 +213,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    width:320,
+    alignSelf:'center'
   },
   buttonText: {
     color: '#FFFFFF',

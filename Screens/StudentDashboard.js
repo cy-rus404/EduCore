@@ -39,7 +39,7 @@ const StudentDashboard = ({ route, navigation }) => {
       )}
 
       <View style={styles.infoCard}>
-        <Text style={styles.infoTitle}>Your Information</Text>
+        <Text style={styles.infoTitle}>Student Profile</Text>
         <Text style={styles.infoText}>Student ID: {studentId}</Text>
         <Text style={styles.infoText}>Level: {level}</Text>
       </View>
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#FF5733',
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 30,
   },
   headerContent: {
     flexDirection: 'row',
