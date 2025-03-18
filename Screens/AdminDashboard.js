@@ -4,12 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const data = [
   { id: '1', title: 'Students', image: require('../assets/images/student.png'), route: 'Student' },
-  { id: '2', title: 'Teachers', image: require('../assets/images/teacher.jpg'), route: 'Teacher' },
+  { id: '2', title: 'Teachers', image: require('../assets/images/teacher.jpg'), route: 'Teachers' }, // Updated route
   { id: '3', title: 'Classes', image: require('../assets/images/class.jpg'), route: 'Class' },
   { id: '4', title: 'Messages', image: require('../assets/images/message.jpg'), route: 'Message' },
   { id: '6', title: 'Information', image: require('../assets/images/announce.jpg'), route: 'Announcement' },
   { id: '5', title: 'Settings', image: require('../assets/images/settings.jpg'), route: 'Settings' },
-
 ];
 
 const AdminDashboard = ({ navigation }) => {
@@ -73,7 +72,7 @@ const styles = StyleSheet.create({
   centerText: {
     textAlign: 'center',
     alignSelf: 'center',
-    width: '100%', // Ensure it takes full width to center properly
+    width: '100%',
   },
   png: {
     width: 80,
