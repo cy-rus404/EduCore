@@ -2,13 +2,28 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 
 const StudentDashboard = ({ route, navigation }) => {
-  const { studentName, studentId, level } = route.params;
+  const { studentName, studentId, level, image } = route.params; // Add image to destructured params
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.welcomeText}>Welcome, {studentName}</Text>
-        <Text style={styles.levelText}>{level}</Text>
+        <View style={styles.headerContent}>
+          {image ? (
+            <Image 
+              source={{ uri: image }} 
+              style={styles.profileImage} 
+            />
+          ) : (
+            <Image 
+              source={{ uri: 'https://via.placeholder.com/50' }} // Fallback image if none provided
+              style={styles.profileImage} 
+            />
+          )}
+          <View>
+            <Text style={styles.welcomeText}>Welcome, {studentName}</Text>
+            <Text style={styles.levelText}>{level}</Text>
+          </View>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
@@ -74,6 +89,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF5733',
     padding: 20,
     paddingTop: 60,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  profileImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 15,
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   welcomeText: {
     fontSize: 24,

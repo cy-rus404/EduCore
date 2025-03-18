@@ -27,14 +27,12 @@ function LoginScreen(props) {
   const [loading, setLoading] = useState(false);
   const [students, setStudents] = useState([]);
 
-  // Load students from AsyncStorage on component mount
   useEffect(() => {
     const loadStudents = async () => {
       try {
         const storedStudents = await AsyncStorage.getItem('students');
         if (storedStudents !== null) {
           const parsedStudents = JSON.parse(storedStudents);
-          // Filter out invalid student entries
           const validStudents = parsedStudents.filter(s => 
             s && typeof s.email === 'string' && typeof s.password === 'string'
           );
@@ -56,13 +54,12 @@ function LoginScreen(props) {
 
   const handleLogin = (values) => {
     const { email, password } = values;
-    const normalizedEmail = email ? email.trim().toLowerCase() : ''; // Fallback to empty string if undefined
-    const normalizedPassword = password ? password.trim() : ''; // Fallback to empty string if undefined
+    const normalizedEmail = email ? email.trim().toLowerCase() : '';
+    const normalizedPassword = password ? password.trim() : '';
     setLoading(true);
     
     console.log('Login attempt with:', { email: normalizedEmail, password: normalizedPassword });
     
-    // Check if admin
     if (normalizedEmail === adminEmail && normalizedPassword === adminPassword) {
       setLoginError('');
       setTimeout(() => {
@@ -72,7 +69,6 @@ function LoginScreen(props) {
       return;
     }
     
-    // Check if teacher
     const teacher = teacherCredentials.find(t => t.email === normalizedEmail && t.password === normalizedPassword);
     if (teacher) {
       setLoginError('');
@@ -83,7 +79,6 @@ function LoginScreen(props) {
       return;
     }
     
-    // Check if student
     console.log('Current students array:', students);
     const student = students.find(s => {
       const studentEmail = s.email && typeof s.email === 'string' ? s.email.trim().toLowerCase() : '';
@@ -100,7 +95,8 @@ function LoginScreen(props) {
         navigation.navigate('StudentDashboard', { 
           studentId: student.studentId, 
           studentName: student.name, 
-          level: student.level 
+          level: student.level,
+          image: student.image // Add image to navigation params
         });
       }, 100);
       return;
