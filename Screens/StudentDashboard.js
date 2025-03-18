@@ -1,8 +1,98 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView, FlatList } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const StudentDashboard = ({ route, navigation }) => {
   const { studentName, studentId, level, image } = route.params;
+  const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
+
+  // Load unread count for this student
+  const loadUnreadCount = async () => {
+    try {
+      const storedAnnouncements = await AsyncStorage.getItem('announcements');
+      const storedReadStatus = await AsyncStorage.getItem(`readStatus_${studentId}`);
+      const readStatus = storedReadStatus ? JSON.parse(storedReadStatus) : {};
+
+      const announcements = storedAnnouncements ? JSON.parse(storedAnnouncements) : [];
+      const unreadCount = announcements.filter(ann => !readStatus[ann.id]).length;
+      setUnreadAnnouncements(unreadCount);
+    } catch (error) {
+      console.error('Failed to load unread count', error);
+    }
+  };
+
+  useEffect(() => {
+    loadUnreadCount();
+    // Listen for focus to refresh unread count
+    const unsubscribe = navigation.addListener('focus', loadUnreadCount);
+    return unsubscribe;
+  }, [navigation]);
+
+  const renderHeader = () => (
+    <>
+      {unreadAnnouncements > 0 && (
+        <View style={styles.alert}>
+          <Text style={styles.alertText}>
+            You have {unreadAnnouncements} new announcement{unreadAnnouncements > 1 ? 's' : ''}!
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.infoCard}>
+        <Text style={styles.infoTitle}>Your Information</Text>
+        <Text style={styles.infoText}>Student ID: {studentId}</Text>
+        <Text style={styles.infoText}>Level: {level}</Text>
+      </View>
+
+      <Text style={styles.sectionTitle}>Quick Actions</Text>
+
+      <View style={styles.actionGrid}>
+        <TouchableOpacity style={styles.actionButton}>
+          <Image 
+            source={require('../assets/images/class.jpg')} 
+            style={styles.actionIcon}
+          />
+          <Text style={styles.actionText}>My Classes</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.actionButton}>
+          <Image 
+            source={require('../assets/images/announce.jpg')} 
+            style={styles.actionIcon}
+          />
+          <Text style={styles.actionText}>Announcements</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.actionButton} 
+          onPress={() => navigation.navigate('Messages', { studentId })}
+        >
+          <Image 
+            source={require('../assets/images/message.jpg')} 
+            style={styles.actionIcon}
+          />
+          <Text style={styles.actionText}>Messages</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.actionButton}>
+          <Image 
+            source={require('../assets/images/settings.jpg')} 
+            style={styles.actionIcon}
+          />
+          <Text style={styles.actionText}>Settings</Text>
+        </TouchableOpacity>
+      </View>
+    </>
+  );
+
+  const renderFooter = () => (
+    <TouchableOpacity 
+      style={styles.logoutButton}
+      onPress={() => navigation.navigate('Login')}
+    >
+      <Text style={styles.logoutText}>Log Out</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -26,56 +116,14 @@ const StudentDashboard = ({ route, navigation }) => {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.contentContainer}>
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>Student Profile</Text>
-          <Text style={styles.infoText}>Student ID: {studentId}</Text>
-          <Text style={styles.infoText}>Level: {level}</Text>
-        </View>
-
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-
-        <View style={styles.actionGrid}>
-          <TouchableOpacity style={styles.actionButton}>
-            <Image 
-              source={require('../assets/images/class.jpg')} 
-              style={styles.actionIcon}
-            />
-            <Text style={styles.actionText}>My Classes</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionButton}>
-            <Image 
-              source={require('../assets/images/announce.jpg')} 
-              style={styles.actionIcon}
-            />
-            <Text style={styles.actionText}>Announcements</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionButton}>
-            <Image 
-              source={require('../assets/images/message.jpg')} 
-              style={styles.actionIcon}
-            />
-            <Text style={styles.actionText}>Messages</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionButton}>
-            <Image 
-              source={require('../assets/images/settings.jpg')} 
-              style={styles.actionIcon}
-            />
-            <Text style={styles.actionText}>Settings</Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity 
-          style={styles.logoutButton}
-          onPress={() => navigation.navigate('Login')}
-        >
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-      </ScrollView>
+      <FlatList
+        data={[]}
+        renderItem={() => null}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      />
     </SafeAreaView>
   );
 };
@@ -88,7 +136,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#FF5733',
     padding: 20,
-    paddingTop: 30,
+    paddingTop: 60,
   },
   headerContent: {
     flexDirection: 'row',
@@ -114,6 +162,18 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 20,
+  },
+  alert: {
+    backgroundColor: '#FF3333',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  alertText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   infoCard: {
     backgroundColor: '#fff',
@@ -145,6 +205,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    marginBottom: 20,
   },
   actionButton: {
     backgroundColor: '#fff',

@@ -11,6 +11,8 @@ import AdminDashboard from './Screens/AdminDashboard';
 import Student from './Screens/Student';
 import LevelScreen from './Screens/LevelScreen';
 import StudentDashboard from './Screens/StudentDashboard';
+import Announcement from './Screens/Announcement';
+import Messages from './Screens/Messages';
 
 // Will be updated soon
 
@@ -67,6 +69,10 @@ export default function App() {
         <Stack.Screen name="Student" component={Student} />
         <Stack.Screen name="Level" component={LevelScreen} />
         <Stack.Screen name="StudentDashboard" component={StudentDashboard} />
+        <Stack.Screen name="Announcement" component={Announcement} />
+        <Stack.Screen name="Messages" component={Messages} />
+
+
 
 
       </Stack.Navigator>
