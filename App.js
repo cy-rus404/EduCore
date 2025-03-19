@@ -6,14 +6,6 @@ import { initializeApp } from '@firebase/app';
 import { getAuth, onAuthStateChanged, signOut } from '@firebase/auth';
 import SplashScreen from './Screens/SplashScreen';
 import HomeScreen from './Screens/HomeScreen';
-import LoginScreen from './Screens/LoginScreen';
-import AdminDashboard from './Screens/AdminDashboard';
-import Student from './Screens/Student';
-import LevelScreen from './Screens/LevelScreen';
-import StudentDashboard from './Screens/StudentDashboard';
-import Announcement from './Screens/Announcement';
-import Messages from './Screens/Messages';
-import Teachers from './Screens/Teacher';
 
 // Will be updated soon
 
@@ -65,14 +57,6 @@ export default function App() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
-        <Stack.Screen name="Student" component={Student} />
-        <Stack.Screen name="Level" component={LevelScreen} />
-        <Stack.Screen name="StudentDashboard" component={StudentDashboard} />
-        <Stack.Screen name="Announcement" component={Announcement} />
-        <Stack.Screen name="Messages" component={Messages} />
-        <Stack.Screen name="Teachers" component={Teachers} />
 
 
 
