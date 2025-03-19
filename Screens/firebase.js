@@ -1,6 +1,7 @@
-// firebase.js
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth"; // Add this for Authentication
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCUzPlGBc5N06BA2v5pSO_0teMyAdVFgAU",
@@ -8,11 +9,12 @@ const firebaseConfig = {
   projectId: "education-d5cc5",
   storageBucket: "education-d5cc5.firebasestorage.app",
   messagingSenderId: "459319681660",
-  appId: "1:459319681660:web:98c735ebe17bc64207dff9"
+  appId: "1:459319681660:web:98c735ebe17bc64207dff9",
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app); // Initialize Authentication
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-export { auth }; // Export auth for use in other files
+export { auth, db, storage };

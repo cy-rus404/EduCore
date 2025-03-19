@@ -8,6 +8,9 @@ import SplashScreen from './Screens/SplashScreen';
 import HomeScreen from './Screens/HomeScreen';
 import LoginScreen from './Screens/LoginScreen';
 import AdminDashboard from './Screens/AdminDashboard';
+import Students from './Screens/Students';
+import LevelScreen from './Screens/LevelScreen';
+
 
 // Create the Stack navigator
 const Stack = createNativeStackNavigator();
@@ -20,7 +23,28 @@ export default function App() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="LoginScreen" component={LoginScreen} />
         <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
-
+        <Stack.Screen name="Students" component={Students} />
+        {/* <Stack.Screen name="LevelScreen" component={LevelScreen} /> */}
+        <Stack.Screen
+          name="Level100"
+          component={LevelScreen}
+          initialParams={{ level: 100 }}
+        />
+        <Stack.Screen
+          name="Level200"
+          component={LevelScreen}
+          initialParams={{ level: 200 }}
+        />
+        <Stack.Screen
+          name="Level300"
+          component={LevelScreen}
+          initialParams={{ level: 300 }}
+        />
+        <Stack.Screen
+          name="Level400"
+          component={LevelScreen}
+          initialParams={{ level: 400 }}
+        />
 
       </Stack.Navigator>
     </NavigationContainer>
