@@ -76,7 +76,7 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.buttonRow}>
             <Button
               mode="contained"
-              onPress={() => navigation.navigate('Login')} // Navigate to Login screen
+              onPress={() => navigation.navigate('LoginScreen')} // Navigate to Login screen
               style={styles.paperButton}
               contentStyle={styles.paperButtonContent}
               buttonColor='#FF5733'
