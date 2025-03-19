@@ -70,4 +70,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-</create_file>
+// </create_file>
