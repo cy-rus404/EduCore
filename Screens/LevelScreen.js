@@ -11,40 +11,78 @@ import {
   Alert,
   Dimensions,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { Provider as PaperProvider, Button } from 'react-native-paper';
 import { db, auth } from './firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from 'firebase/auth';
 import * as ImagePicker from 'expo-image-picker';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const LevelScreen = ({ route }) => {
+const CLOUD_NAME = 'dvhylo4ih';
+
+// Map level numbers to new names and their respective classes
+const levelNames = {
+  100: 'Upper Pre-school',
+  200: 'Lower Primary',
+  300: 'Upper Primary',
+  400: 'JHS',
+};
+
+// Define classes for each level
+const levelClasses = {
+  100: ['Creche', 'Nursery', 'Kindergarten 1', 'Kindergarten 2'],
+  200: ['Class 1', 'Class 2', 'Class 3'],
+  300: ['Class 4', 'Class 5', 'Class 6'],
+  400: ['JHS 1', 'JHS 2', 'JHS 3'],
+};
+
+const LevelScreen = ({ route, navigation }) => {
   const { level } = route.params;
   const [students, setStudents] = useState([]);
-  const [filteredStudents, setFilteredStudents] = useState([]); // For filtered list
-  const [searchQuery, setSearchQuery] = useState(''); // For search bar input
+  const [filteredStudents, setFilteredStudents] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [classModalVisible, setClassModalVisible] = useState(false); // For custom class dropdown
+  const [parentModal, setParentModal] = useState(null); // Track which parent modal was open
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [name, setName] = useState('');
   const [id, setId] = useState('');
   const [age, setAge] = useState('');
   const [dob, setDob] = useState('');
-  const [course, setCourse] = useState('');
+  const [studentClass, setStudentClass] = useState(''); // Class selection
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [image, setImage] = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    fetchStudents();
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        console.log('User authenticated in LevelScreen:', currentUser.uid);
+        fetchStudents();
+      } else {
+        console.log('No user is authenticated in LevelScreen. Redirecting to LoginScreen.');
+        navigation.navigate('LoginScreen');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigation]);
 
   const fetchStudents = async () => {
     try {
+      console.log('Fetching students for path:', `students/levels/level${level}`);
       const querySnapshot = await getDocs(collection(db, 'students', 'levels', `level${level}`));
       const studentList = querySnapshot.docs.map(doc => ({ ...doc.data(), docId: doc.id }));
       setStudents(studentList);
-      setFilteredStudents(studentList); // Initially, filtered list is the same as the full list
+      setFilteredStudents(studentList);
+      console.log('Students fetched successfully:', studentList);
     } catch (error) {
       console.error('Error fetching students:', error);
       Alert.alert('Error', 'Failed to fetch students: ' + error.message);
@@ -85,10 +123,10 @@ const LevelScreen = ({ route }) => {
           name: 'student.jpg',
         });
       }
-      formData.append('upload_preset', 'student_upload'); // Your Cloudinary upload preset
-      formData.append('cloud_name', 'dvhylo4ih'); // Replace with your Cloudinary cloud name
+      formData.append('upload_preset', 'student_upload');
+      formData.append('cloud_name', CLOUD_NAME);
 
-      const response = await fetch('https://api.cloudinary.com/v1_1/dvhylo4ih/image/upload', {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -107,7 +145,7 @@ const LevelScreen = ({ route }) => {
   };
 
   const addStudent = async () => {
-    if (!name || !id || !age || !dob || !course || !email || !password) {
+    if (!name || !id || !age || !dob || !studentClass || !email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -128,7 +166,7 @@ const LevelScreen = ({ route }) => {
         }
       }
 
-      const studentData = { name, id, age, dob, course, email, uid: user.uid, imageUrl };
+      const studentData = { name, id, age, dob, studentClass, email, uid: user.uid, imageUrl };
       await addDoc(collection(db, 'students', 'levels', `level${level}`), studentData);
 
       Alert.alert('Success', 'Student added successfully');
@@ -141,14 +179,57 @@ const LevelScreen = ({ route }) => {
     }
   };
 
+  const editStudent = async () => {
+    if (!name || !id || !age || !dob || !studentClass || !email) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    try {
+      let imageUrl = selectedStudent.imageUrl;
+      if (image) {
+        try {
+          imageUrl = await uploadImageToCloudinary(image);
+          console.log('Updated image uploaded to Cloudinary:', imageUrl);
+        } catch (uploadError) {
+          console.error('Image upload failed:', uploadError);
+          Alert.alert('Warning', 'Student updated, but image upload failed: ' + uploadError.message);
+        }
+      }
+
+      const updatedStudentData = { name, id, age, dob, studentClass, email, imageUrl };
+      await updateDoc(doc(db, 'students', 'levels', `level${level}`, selectedStudent.docId), updatedStudentData);
+
+      Alert.alert('Success', 'Student updated successfully');
+      clearInputs();
+      setEditModalVisible(false);
+      setDetailsModalVisible(false);
+      fetchStudents();
+    } catch (error) {
+      console.error('Edit student error:', error);
+      Alert.alert('Error', error.message);
+    }
+  };
+
   const deleteStudent = async (docId) => {
     try {
       await deleteDoc(doc(db, 'students', 'levels', `level${level}`, docId));
       Alert.alert('Success', 'Student deleted');
+      setDetailsModalVisible(false);
       fetchStudents();
     } catch (error) {
       console.error('Error deleting student:', error);
       Alert.alert('Error', error.message);
+    }
+  };
+
+  const resetPassword = async (email) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      Alert.alert('Success', 'Password reset email sent to ' + email);
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      Alert.alert('Error', 'Failed to send password reset email: ' + error.message);
     }
   };
 
@@ -157,83 +238,127 @@ const LevelScreen = ({ route }) => {
     setId('');
     setAge('');
     setDob('');
-    setCourse('');
+    setStudentClass('');
     setEmail('');
     setPassword('');
     setImage(null);
   };
 
-  // Search function to filter students
   const handleSearch = (query) => {
     setSearchQuery(query);
     if (query.trim() === '') {
-      setFilteredStudents(students); // Reset to full list if query is empty
+      setFilteredStudents(students);
     } else {
       const lowerQuery = query.toLowerCase();
       const filtered = students.filter(
         (student) =>
           student.name.toLowerCase().includes(lowerQuery) ||
           student.id.toLowerCase().includes(lowerQuery) ||
-          student.course.toLowerCase().includes(lowerQuery) ||
           student.email.toLowerCase().includes(lowerQuery)
       );
       setFilteredStudents(filtered);
     }
   };
 
+  const openEditModal = (student) => {
+    setSelectedStudent(student);
+    setName(student.name);
+    setId(student.id);
+    setAge(student.age);
+    setDob(student.dob);
+    setStudentClass(student.studentClass || '');
+    setEmail(student.email);
+    setImage(null); // Reset image to allow uploading a new one
+    setEditModalVisible(true);
+  };
+
+  const openClassModal = () => {
+    console.log('Opening class modal for level:', level);
+    console.log('Available classes:', levelClasses[level]);
+    // Track which parent modal is open
+    if (modalVisible) {
+      setParentModal('add');
+      setModalVisible(false);
+    } else if (editModalVisible) {
+      setParentModal('edit');
+      setEditModalVisible(false);
+    }
+    setClassModalVisible(true);
+    console.log('Class modal visibility set to true');
+  };
+
+  const closeClassModal = () => {
+    console.log('Closing class modal');
+    setClassModalVisible(false);
+    // Re-open the parent modal
+    if (parentModal === 'add') {
+      setModalVisible(true);
+    } else if (parentModal === 'edit') {
+      setEditModalVisible(true);
+    }
+    setParentModal(null);
+    console.log('Class modal visibility set to false');
+  };
+
+  const selectClass = (className) => {
+    console.log('Selected class:', className);
+    setStudentClass(className);
+    closeClassModal();
+  };
+
   const renderStudent = ({ item }) => (
-    <View style={styles.studentItem}>
+    <TouchableOpacity
+      style={styles.studentItem}
+      onPress={() => {
+        setSelectedStudent(item);
+        setDetailsModalVisible(true);
+      }}
+    >
       {item.imageUrl && <Image source={{ uri: item.imageUrl }} style={styles.studentImage} />}
-      <View style={styles.studentDetails}>
-        <Text style={styles.studentText}>
-          {item.name} (ID: {item.id})
-        </Text>
-        <Text>Age: {item.age}, DOB: {item.dob}, Course: {item.course}</Text>
-        <Text>Email: {item.email}</Text>
-        <Button
-          mode="outlined"
-          onPress={() => deleteStudent(item.docId)}
-          style={styles.deleteButton}
-          textColor="#FF5733"
-        >
-          Delete
-        </Button>
-      </View>
-    </View>
+      <Text style={styles.studentName}>{item.name}</Text>
+    </TouchableOpacity>
+  );
+
+  const renderClassOption = (className) => (
+    <TouchableOpacity
+      key={className}
+      style={styles.classOption}
+      onPress={() => selectClass(className)}
+    >
+      <Text style={styles.classOptionText}>{className}</Text>
+    </TouchableOpacity>
   );
 
   return (
     <PaperProvider>
       <View style={styles.screen}>
-        <Text style={styles.title}>Level {level}</Text>
-        {/* Search Bar */}
         <TextInput
           style={styles.searchBar}
-          placeholder="Search students by name, ID, course, or email..."
+          placeholder="Search students by name, ID, or email..."
           value={searchQuery}
           onChangeText={handleSearch}
           autoCapitalize="none"
         />
         <FlatList
-          data={filteredStudents} // Use filtered list
+          data={filteredStudents}
           renderItem={renderStudent}
           keyExtractor={item => item.docId}
           style={styles.studentList}
         />
-        <Button
-          mode="contained"
-          onPress={() => setModalVisible(true)}
+        <TouchableOpacity
           style={styles.addButton}
-          buttonColor="#FF5733"
-          contentStyle={styles.buttonContent}
+          onPress={() => {
+            clearInputs();
+            setModalVisible(true);
+          }}
         >
-          Add Student
-        </Button>
-
+          <Text style={styles.addButtonText}>+</Text>
+        </TouchableOpacity>
+        {/* Add Student Modal */}
         <Modal visible={modalVisible} animationType="slide" transparent>
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Add Student to Level {level}</Text>
+              <Text style={styles.modalTitle}>Add Student to {levelNames[level]}</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Name"
@@ -246,7 +371,7 @@ const LevelScreen = ({ route }) => {
                 placeholder="ID"
                 value={id}
                 onChangeText={setId}
-                keyboardType="default"
+                keyboardType="numeric"
               />
               <TextInput
                 style={styles.input}
@@ -257,18 +382,19 @@ const LevelScreen = ({ route }) => {
               />
               <TextInput
                 style={styles.input}
-                placeholder="Date of Birth (YYYY-MM-DD)"
+                placeholder="DOB (YYYY-MM-DD)"
                 value={dob}
                 onChangeText={setDob}
                 keyboardType="numbers-and-punctuation"
               />
-              <TextInput
-                style={styles.input}
-                placeholder="Course"
-                value={course}
-                onChangeText={setCourse}
-                keyboardType="default"
-              />
+              <TouchableOpacity
+                style={styles.dropdownButton}
+                onPress={openClassModal}
+              >
+                <Text style={styles.dropdownText}>
+                  {studentClass || 'Select Class'}
+                </Text>
+              </TouchableOpacity>
               <TextInput
                 style={styles.input}
                 placeholder="Email"
@@ -310,6 +436,163 @@ const LevelScreen = ({ route }) => {
             </View>
           </View>
         </Modal>
+        {/* Edit Student Modal */}
+        <Modal visible={editModalVisible} animationType="slide" transparent>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Edit Student in {levelNames[level]}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                value={name}
+                onChangeText={setName}
+                keyboardType="default"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="ID"
+                value={id}
+                onChangeText={setId}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Age"
+                value={age}
+                onChangeText={setAge}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="DOB (YYYY-MM-DD)"
+                value={dob}
+                onChangeText={setDob}
+                keyboardType="numbers-and-punctuation"
+              />
+              <TouchableOpacity
+                style={styles.dropdownButton}
+                onPress={openClassModal}
+              >
+                <Text style={styles.dropdownText}>
+                  {studentClass || 'Select Class'}
+                </Text>
+              </TouchableOpacity>
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+                <Text style={styles.imagePickerText}>
+                  {image ? 'Image Selected' : 'Pick New Student Image'}
+                </Text>
+              </TouchableOpacity>
+              {image && <Image source={{ uri: image }} style={styles.previewImage} />}
+              {selectedStudent?.imageUrl && !image && (
+                <Image source={{ uri: selectedStudent.imageUrl }} style={styles.previewImage} />
+              )}
+              <Button
+                mode="contained"
+                onPress={editStudent}
+                style={styles.modalButton}
+                buttonColor="#FF5733"
+              >
+                Update
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={() => setEditModalVisible(false)}
+                style={styles.modalButton}
+                textColor="#FF5733"
+              >
+                Cancel
+              </Button>
+            </View>
+          </View>
+        </Modal>
+        {/* Class Selection Modal (Custom Dropdown) */}
+        {classModalVisible && (
+          <Modal visible={classModalVisible} animationType="fade" transparent>
+            <View style={styles.classModalContainer}>
+              <View style={styles.classModalContent}>
+                <Text style={styles.modalTitle}>Select Class</Text>
+                <ScrollView>
+                  {levelClasses[level] && levelClasses[level].length > 0 ? (
+                    levelClasses[level].map(className => renderClassOption(className))
+                  ) : (
+                    <Text style={styles.classOptionText}>No classes available</Text>
+                  )}
+                </ScrollView>
+                <Button
+                  mode="outlined"
+                  onPress={closeClassModal}
+                  style={styles.modalButton}
+                  textColor="#FF5733"
+                >
+                  Cancel
+                </Button>
+              </View>
+            </View>
+          </Modal>
+        )}
+        {/* Student Details Modal */}
+        <Modal visible={detailsModalVisible} animationType="slide" transparent>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              {selectedStudent && (
+                <>
+                  <Text style={styles.modalTitle}>{selectedStudent.name}</Text>
+                  {selectedStudent.imageUrl && (
+                    <Image source={{ uri: selectedStudent.imageUrl }} style={styles.modalImage} />
+                  )}
+                  <Text style={styles.detailText}>ID: {selectedStudent.id}</Text>
+                  <Text style={styles.detailText}>Age: {selectedStudent.age}</Text>
+                  <Text style={styles.detailText}>DOB: {selectedStudent.dob}</Text>
+                  <Text style={styles.detailText}>Class: {selectedStudent.studentClass || 'Not set'}</Text>
+                  <Text style={styles.detailText}>Email: {selectedStudent.email}</Text>
+                  <Button
+                    mode="outlined"
+                    onPress={() => openEditModal(selectedStudent)}
+                    style={styles.smallEditButton}
+                    textColor="#FF5733"
+                    labelStyle={styles.smallButtonText}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    mode="outlined"
+                    onPress={() => resetPassword(selectedStudent.email)}
+                    style={styles.smallResetButton}
+                    textColor="#FF5733"
+                    labelStyle={styles.smallButtonText}
+                  >
+                    Reset Password
+                  </Button>
+                  <Button
+                    mode="outlined"
+                    onPress={() => deleteStudent(selectedStudent.docId)}
+                    style={styles.smallDeleteButton}
+                    textColor="#FF5733"
+                    labelStyle={styles.smallButtonText}
+                  >
+                    Delete
+                  </Button>
+                  <Button
+                    mode="outlined"
+                    onPress={() => setDetailsModalVisible(false)}
+                    style={styles.modalButton}
+                    textColor="#FF5733"
+                  >
+                    Close
+                  </Button>
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
       </View>
     </PaperProvider>
   );
@@ -320,13 +603,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingVertical: SCREEN_HEIGHT * 0.03,
-  },
-  title: {
-    fontSize: SCREEN_WIDTH * 0.08,
-    fontWeight: 'bold',
-    color: '#FF5733',
-    textAlign: 'center',
-    marginBottom: SCREEN_HEIGHT * 0.01,
   },
   searchBar: {
     height: SCREEN_HEIGHT * 0.06,
@@ -354,22 +630,26 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginRight: SCREEN_WIDTH * 0.03,
   },
-  studentDetails: {
-    flex: 1,
-  },
-  studentText: {
-    fontSize: SCREEN_WIDTH * 0.04,
+  studentName: {
+    fontSize: SCREEN_WIDTH * 0.045,
     fontWeight: 'bold',
   },
-  deleteButton: {
-    marginTop: SCREEN_HEIGHT * 0.01,
-  },
   addButton: {
-    margin: SCREEN_WIDTH * 0.05,
-    borderRadius: SCREEN_WIDTH * 0.02,
+    position: 'absolute',
+    bottom: SCREEN_HEIGHT * 0.03,
+    right: SCREEN_WIDTH * 0.05,
+    width: SCREEN_WIDTH * 0.15,
+    height: SCREEN_WIDTH * 0.15,
+    borderRadius: SCREEN_WIDTH * 0.075,
+    backgroundColor: '#FF5733',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
   },
-  buttonContent: {
-    height: SCREEN_HEIGHT * 0.07,
+  addButtonText: {
+    fontSize: SCREEN_WIDTH * 0.08,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   modalContainer: {
     flex: 1,
@@ -382,6 +662,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: SCREEN_WIDTH * 0.05,
     borderRadius: 10,
+    alignItems: 'center',
   },
   modalTitle: {
     fontSize: SCREEN_WIDTH * 0.06,
@@ -390,6 +671,37 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: SCREEN_HEIGHT * 0.02,
   },
+  modalImage: {
+    width: SCREEN_WIDTH * 0.3,
+    height: SCREEN_WIDTH * 0.3,
+    borderRadius: 5,
+    marginBottom: SCREEN_HEIGHT * 0.02,
+  },
+  detailText: {
+    fontSize: SCREEN_WIDTH * 0.04,
+    marginBottom: SCREEN_HEIGHT * 0.01,
+  },
+  smallEditButton: {
+    marginVertical: SCREEN_HEIGHT * 0.01,
+    borderRadius: SCREEN_WIDTH * 0.02,
+    paddingVertical: 2,
+    paddingHorizontal: 5,
+  },
+  smallResetButton: {
+    marginVertical: SCREEN_HEIGHT * 0.01,
+    borderRadius: SCREEN_WIDTH * 0.02,
+    paddingVertical: 2,
+    paddingHorizontal: 5,
+  },
+  smallDeleteButton: {
+    marginVertical: SCREEN_HEIGHT * 0.01,
+    borderRadius: SCREEN_WIDTH * 0.02,
+    paddingVertical: 2,
+    paddingHorizontal: 5,
+  },
+  smallButtonText: {
+    fontSize: SCREEN_WIDTH * 0.035,
+  },
   input: {
     height: SCREEN_HEIGHT * 0.06,
     borderColor: '#ccc',
@@ -397,6 +709,46 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 10,
     marginBottom: SCREEN_HEIGHT * 0.015,
+    width: '100%',
+  },
+  dropdownButton: {
+    height: SCREEN_HEIGHT * 0.06,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: SCREEN_HEIGHT * 0.015,
+    width: '100%',
+    justifyContent: 'center',
+  },
+  dropdownText: {
+    color: '#333',
+    fontSize: SCREEN_WIDTH * 0.04,
+  },
+  classModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  classModalContent: {
+    width: SCREEN_WIDTH * 0.7,
+    maxHeight: SCREEN_HEIGHT * 0.4,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: SCREEN_WIDTH * 0.05,
+    alignItems: 'center',
+  },
+  classOption: {
+    paddingVertical: SCREEN_HEIGHT * 0.02,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    width: '100%',
+    alignItems: 'center',
+  },
+  classOptionText: {
+    fontSize: SCREEN_WIDTH * 0.045,
+    color: '#333',
   },
   imagePicker: {
     height: SCREEN_HEIGHT * 0.06,
@@ -406,6 +758,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     marginBottom: SCREEN_HEIGHT * 0.015,
+    width: '100%',
   },
   imagePickerText: {
     color: '#333',
@@ -414,12 +767,12 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH * 0.3,
     height: SCREEN_WIDTH * 0.3,
     borderRadius: 5,
-    alignSelf: 'center',
     marginBottom: SCREEN_HEIGHT * 0.015,
   },
   modalButton: {
     marginVertical: SCREEN_HEIGHT * 0.01,
     borderRadius: SCREEN_WIDTH * 0.02,
+    width: '100%',
   },
 });
 

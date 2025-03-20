@@ -1,27 +1,53 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { setDoc, doc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+// Map level numbers to new names for display
+const levelNames = {
+  100: 'Pre-school',
+  200: 'Lower Primary',
+  300: 'Upper Primary',
+  400: 'JHS',
+};
+
 const Students = ({ navigation }) => {
-  const navigateToLevel = (level) => {
-    navigation.navigate(`Level${level}`);
-  };
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const initializeLevelsDoc = async () => {
-      try {
-        await setDoc(doc(db, 'students', 'levels'), { init: true }, { merge: true });
-        console.log('Levels document initialized');
-      } catch (error) {
-        console.error('Error initializing levels document:', error);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        console.log('User authenticated in Students:', currentUser.uid);
+        initializeLevelsDoc();
+      } else {
+        console.log('No user is authenticated in Students. Redirecting to LoginScreen.');
+        navigation.navigate('LoginScreen');
       }
-    };
-    initializeLevelsDoc();
-  }, []);
+    });
+
+    return () => unsubscribe();
+  }, [navigation]);
+
+  const initializeLevelsDoc = async () => {
+    try {
+      console.log('Attempting to initialize levels document...');
+      await setDoc(doc(db, 'students', 'levels'), { init: true }, { merge: true });
+      console.log('Levels document initialized successfully');
+    } catch (error) {
+      console.error('Error initializing levels document:', error);
+      Alert.alert('Error', 'Failed to initialize levels document: ' + error.message);
+    }
+  };
+
+  const navigateToLevel = (level) => {
+    // Keep the route names as Level100, Level200, etc.
+    navigation.navigate(`Level${level}`);
+  };
 
   return (
     <PaperProvider>
@@ -34,7 +60,8 @@ const Students = ({ navigation }) => {
               style={styles.levelBox}
               onPress={() => navigateToLevel(level)}
             >
-              <Text style={styles.levelText}>Level {level}</Text>
+              {/* Display the new name instead of "Level {level}" */}
+              <Text style={styles.levelText}>{levelNames[level]}</Text>
             </TouchableOpacity>
           ))}
         </View>
