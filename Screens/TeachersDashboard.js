@@ -1,88 +1,116 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  TouchableOpacity,
+  Alert,
   Dimensions,
   SafeAreaView,
   Image,
 } from 'react-native';
-import { Provider as PaperProvider, Button } from 'react-native-paper';
-import { signOut, onAuthStateChanged } from 'firebase/auth';
-import { auth, db } from './firebase';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { auth, db } from './firebase'; // Import db for Firestore
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+
+// Import local images (adjust paths based on your folder structure)
+const viewStudentsImage = require('../assets/images/stud.png');
+const gradeStudentsImage = require('../assets/images/grade.png');
+const attendanceImage = require('../assets/images/attend.png');
+const requestLeaveImage = require('../assets/images/leave.png');
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const TeachersDashboard = ({ navigation }) => {
-  const [teacherData, setTeacherData] = useState({ name: '', assignedClass: '', imageUrl: null });
   const [user, setUser] = useState(null);
+  const [teacherName, setTeacherName] = useState('Teacher'); // Default fallback
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
       if (currentUser) {
-        fetchTeacherData(currentUser.uid);
+        setUser(currentUser);
+        console.log('Teacher logged in:', currentUser.email, 'UID:', currentUser.uid);
+        if (currentUser.email === 'admin@admin.com') {
+          Alert.alert('Access Denied', 'This dashboard is for teachers only.');
+          navigation.navigate('LoginScreen');
+          return;
+        }
+        // Fetch teacher's name from Firestore
+        fetchTeacherName(currentUser.uid);
       } else {
+        console.log('No user found. Redirecting to LoginScreen.');
         navigation.navigate('LoginScreen');
       }
     });
     return () => unsubscribe();
   }, [navigation]);
 
-  const fetchTeacherData = async (uid) => {
+  const fetchTeacherName = async (uid) => {
     try {
       const q = query(collection(db, 'teachers'), where('uid', '==', uid));
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
-        const teacherDoc = querySnapshot.docs[0].data();
-        setTeacherData({
-          name: teacherDoc.name,
-          assignedClass: teacherDoc.assignedClass,
-          imageUrl: teacherDoc.imageUrl || null,
-        });
+        const teacherData = querySnapshot.docs[0].data();
+        setTeacherName(teacherData.name || 'Teacher');
       } else {
-        console.log('Teacher not found');
+        console.log('No teacher document found for UID:', uid);
+        setTeacherName('Teacher'); // Fallback if no match
       }
     } catch (error) {
-      console.error('Error fetching teacher data:', error);
+      console.error('Error fetching teacher name:', error.message);
+      setTeacherName('Teacher'); // Fallback on error
     }
   };
 
-  const handleLogout = async () => {
+  const handleSignOut = async () => {
     try {
       await signOut(auth);
+      Alert.alert('Success', 'Signed out successfully');
       navigation.navigate('LoginScreen');
     } catch (error) {
-      console.error('Logout Error:', error);
+      Alert.alert('Error', 'Failed to sign out: ' + error.message);
     }
   };
+
+  const dashboardOptions = [
+    { title: 'View Students', screen: 'ViewStudents', image: viewStudentsImage },
+    { title: 'Grade Students', screen: 'GradeStudents', image: gradeStudentsImage },
+    { title: 'Attendance', screen: 'Attendance', image: attendanceImage },
+    { title: 'Request Leave', screen: 'RequestLeave', image: requestLeaveImage },
+  ];
+
+  const renderOption = ({ title, screen, image }) => (
+    <TouchableOpacity
+      style={styles.optionButton}
+      onPress={() => navigation.navigate(screen)}
+    >
+      <Image source={image} style={styles.optionImage} resizeMode="contain" />
+      <Text style={styles.optionText}>{title}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <PaperProvider>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.screen}>
           <Text style={styles.title}>Teacher Dashboard</Text>
-          <View style={styles.profileBox}>
-            {teacherData.imageUrl ? (
-              <Image source={{ uri: teacherData.imageUrl }} style={styles.teacherImage} />
-            ) : (
-              <View style={styles.placeholderImage} />
-            )}
-            <View style={styles.teacherInfo}>
-              <Text style={styles.teacherName}>{teacherData.name || 'Teacher'}</Text>
-              <Text style={styles.teacherClass}>Class: {teacherData.assignedClass || 'N/A'}</Text>
+          {user && (
+            <Text style={styles.welcomeText}>Welcome, {teacherName}</Text>
+          )}
+          <View style={styles.optionsContainer}>
+            <View style={styles.row}>
+              {renderOption(dashboardOptions[0])}
+              {renderOption(dashboardOptions[1])}
+            </View>
+            <View style={styles.row}>
+              {renderOption(dashboardOptions[2])}
+              {renderOption(dashboardOptions[3])}
             </View>
           </View>
-          <Button
-            mode="outlined"
-            onPress={handleLogout}
-            style={styles.logoutButton}
-            textColor="#FF5733"
-            contentStyle={styles.buttonContent}
-          >
-            Logout
-          </Button>
+          <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     </PaperProvider>
@@ -96,65 +124,68 @@ const styles = StyleSheet.create({
   },
   screen: {
     flex: 1,
+    backgroundColor: '#fff',
     paddingVertical: SCREEN_HEIGHT * 0.03,
     paddingHorizontal: SCREEN_WIDTH * 0.05,
+    alignItems: 'center',
   },
   title: {
     fontSize: SCREEN_WIDTH * 0.08,
     fontWeight: 'bold',
     color: '#FF5733',
     textAlign: 'center',
-    marginBottom: SCREEN_HEIGHT * 0.03,
+    marginBottom: SCREEN_HEIGHT * 0.02,
   },
-  profileBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    padding: SCREEN_WIDTH * 0.05,
-    marginBottom: SCREEN_HEIGHT * 0.03,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    elevation: 3,
-    width: SCREEN_WIDTH * 0.9,
-    alignSelf: 'center',
-  },
-  teacherImage: {
-    width: SCREEN_WIDTH * 0.1,
-    height: SCREEN_WIDTH * 0.1,
-    borderRadius: SCREEN_WIDTH * 0.05,
-    marginRight: SCREEN_WIDTH * 0.03,
-  },
-  placeholderImage: {
-    width: SCREEN_WIDTH * 0.1,
-    height: SCREEN_WIDTH * 0.1,
-    borderRadius: SCREEN_WIDTH * 0.05,
-    backgroundColor: '#ccc',
-    marginRight: SCREEN_WIDTH * 0.03,
-  },
-  teacherInfo: {
-    flexDirection: 'column',
-  },
-  teacherName: {
-    fontSize: SCREEN_WIDTH * 0.06,
-    fontWeight: 'bold',
-    color: '#FF5733',
-  },
-  teacherClass: {
-    fontSize: SCREEN_WIDTH * 0.04,
+  welcomeText: {
+    fontSize: SCREEN_WIDTH * 0.045,
     color: '#333',
-  },
-  logoutButton: {
-    marginTop: 'auto',
     marginBottom: SCREEN_HEIGHT * 0.03,
-    borderRadius: SCREEN_WIDTH * 0.02,
-    alignSelf: 'center',
-    width: SCREEN_WIDTH * 0.5,
-    borderColor: '#FF5733',
-    backgroundColor: 'transparent',
   },
-  buttonContent: {
+  optionsContainer: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: SCREEN_HEIGHT * 0.03,
+  },
+  optionButton: {
+    width: SCREEN_WIDTH * 0.42,
+    height: SCREEN_HEIGHT * 0.2,
+    backgroundColor: '#FF5733',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3,
+    padding: SCREEN_WIDTH * 0.02,
+  },
+  optionImage: {
+    width: '80%',
+    height: SCREEN_HEIGHT * 0.12,
+    marginBottom: SCREEN_HEIGHT * 0.01,
+  },
+  optionText: {
+    fontSize: SCREEN_WIDTH * 0.04,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+  },
+  signOutButton: {
+    width: SCREEN_WIDTH * 0.8,
     height: SCREEN_HEIGHT * 0.07,
+    backgroundColor: '#ccc',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SCREEN_HEIGHT * 0.03,
+  },
+  signOutText: {
+    fontSize: SCREEN_WIDTH * 0.045,
+    fontWeight: 'bold',
+    color: '#333',
   },
 });
 

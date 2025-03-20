@@ -15,6 +15,7 @@ import AdminAnnouncements from './Screens/AdminAnnouncement';
 import StudentAnnouncements from './Screens/StudentAnnouncement';
 import Teachers from './Screens/Teachers';
 import TeachersDashboard from './Screens/TeachersDashboard';
+import ViewStudents from './Screens/ViewStudents';
 
 
 // Create the Stack navigator
@@ -34,6 +35,7 @@ export default function App() {
         <Stack.Screen name="StudentAnnouncements" component={StudentAnnouncements} />
         <Stack.Screen name="Teachers" component={Teachers} />
         <Stack.Screen name="TeachersDashboard" component={TeachersDashboard} />
+        <Stack.Screen name="ViewStudents" component={ViewStudents} />
 
 
 
