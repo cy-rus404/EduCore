@@ -14,8 +14,15 @@ const LoginScreen = ({ navigation }) => {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigation.navigate('AdminDashboard'); // Navigate to Admin Dashboard on success
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userEmail = userCredential.user.email;
+
+      // Check if the logged-in user is the admin
+      if (userEmail === 'admin@admin.com') {
+        navigation.navigate('AdminDashboard'); // Admin login
+      } else {
+        navigation.navigate('StudentDashboard'); // Student login
+      }
     } catch (error) {
       Alert.alert('Login Error', error.message);
     } finally {
@@ -94,8 +101,8 @@ const styles = StyleSheet.create({
   img: {
     width: 100,
     height: 100,
-    alignSelf: 'center', // Center horizontally
-    marginBottom: SCREEN_HEIGHT * 0.03, // Replace paddingBottom with marginBottom
+    alignSelf: 'center',
+    marginBottom: SCREEN_HEIGHT * 0.03,
   },
 });
 

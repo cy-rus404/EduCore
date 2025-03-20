@@ -10,6 +10,7 @@ import LoginScreen from './Screens/LoginScreen';
 import AdminDashboard from './Screens/AdminDashboard';
 import Students from './Screens/Students';
 import LevelScreen from './Screens/LevelScreen';
+import StudentDashboard from './Screens/StudentDashboard';
 
 
 // Create the Stack navigator
@@ -24,7 +25,8 @@ export default function App() {
         <Stack.Screen name="LoginScreen" component={LoginScreen} />
         <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
         <Stack.Screen name="Students" component={Students} />
-        {/* <Stack.Screen name="LevelScreen" component={LevelScreen} /> */}
+        <Stack.Screen name="StudentDashboard" component={StudentDashboard} />
+
         <Stack.Screen
           name="Level100"
           component={LevelScreen}
