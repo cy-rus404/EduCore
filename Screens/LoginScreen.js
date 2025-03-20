@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Dimensions, Alert, Image } from 'react-native';
 import { Provider as PaperProvider, TextInput, Button, Text } from 'react-native-paper';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from './firebase';
+import { auth, db } from './firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -16,13 +17,24 @@ const LoginScreen = ({ navigation }) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const userEmail = userCredential.user.email;
+      const userUid = userCredential.user.uid;
 
-      // Check if the logged-in user is the admin
+      // Check if the user is an admin
       if (userEmail === 'admin@admin.com') {
-        navigation.navigate('AdminDashboard'); // Admin login
-      } else {
-        navigation.navigate('StudentDashboard'); // Student login
+        navigation.navigate('AdminDashboard');
+        return;
       }
+
+      // Check if the user is a teacher
+      const teacherQuery = query(collection(db, 'teachers'), where('uid', '==', userUid));
+      const teacherSnapshot = await getDocs(teacherQuery);
+      if (!teacherSnapshot.empty) {
+        navigation.navigate('TeachersDashboard');
+        return;
+      }
+
+      // Default to StudentDashboard if not admin or teacher
+      navigation.navigate('StudentDashboard');
     } catch (error) {
       Alert.alert('Login Error', error.message);
     } finally {

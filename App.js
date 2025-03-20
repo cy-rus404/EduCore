@@ -13,6 +13,8 @@ import LevelScreen from './Screens/LevelScreen';
 import StudentDashboard from './Screens/StudentDashboard';
 import AdminAnnouncements from './Screens/AdminAnnouncement';
 import StudentAnnouncements from './Screens/StudentAnnouncement';
+import Teachers from './Screens/Teachers';
+import TeachersDashboard from './Screens/TeachersDashboard';
 
 
 // Create the Stack navigator
@@ -30,6 +32,10 @@ export default function App() {
         <Stack.Screen name="StudentDashboard" component={StudentDashboard} />
         <Stack.Screen name="AdminAnnouncements" component={AdminAnnouncements} />
         <Stack.Screen name="StudentAnnouncements" component={StudentAnnouncements} />
+        <Stack.Screen name="Teachers" component={Teachers} />
+        <Stack.Screen name="TeachersDashboard" component={TeachersDashboard} />
+
+
 
         <Stack.Screen
           name="Level100"

@@ -12,27 +12,18 @@ import {
   Dimensions,
   Platform,
   ScrollView,
-  SafeAreaView, // Added SafeAreaView import
+  SafeAreaView,
 } from 'react-native';
 import { Provider as PaperProvider, Button } from 'react-native-paper';
 import { db, auth } from './firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from 'firebase/auth';
+import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, where } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, fetchSignInMethodsForEmail } from 'firebase/auth';
 import * as ImagePicker from 'expo-image-picker';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const CLOUD_NAME = 'dvhylo4ih';
 
-// Map level numbers to new names and their respective classes
-const levelNames = {
-  100: 'Upper Pre-school',
-  200: 'Lower Primary',
-  300: 'Upper Primary',
-  400: 'JHS',
-};
-
-// Define classes for each level
 const levelClasses = {
   100: ['Creche', 'Nursery', 'Kindergarten 1', 'Kindergarten 2'],
   200: ['Class 1', 'Class 2', 'Class 3'],
@@ -40,22 +31,28 @@ const levelClasses = {
   400: ['JHS 1', 'JHS 2', 'JHS 3'],
 };
 
-const LevelScreen = ({ route, navigation }) => {
-  const { level } = route.params;
-  const [students, setStudents] = useState([]);
-  const [filteredStudents, setFilteredStudents] = useState([]);
+const allClasses = Object.values(levelClasses).flat();
+
+// Simple email validation regex
+const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const Teachers = ({ navigation }) => {
+  const [teachers, setTeachers] = useState([]);
+  const [filteredTeachers, setFilteredTeachers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
-  const [classModalVisible, setClassModalVisible] = useState(false); // For custom class dropdown
-  const [parentModal, setParentModal] = useState(null); // Track which parent modal was open
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [classModalVisible, setClassModalVisible] = useState(false);
+  const [parentModal, setParentModal] = useState(null);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [name, setName] = useState('');
-  const [id, setId] = useState('');
   const [age, setAge] = useState('');
   const [dob, setDob] = useState('');
-  const [studentClass, setStudentClass] = useState(''); // Class selection
+  const [assignedClass, setAssignedClass] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [image, setImage] = useState(null);
@@ -65,28 +62,29 @@ const LevelScreen = ({ route, navigation }) => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        console.log('User authenticated in LevelScreen:', currentUser.uid);
-        fetchStudents();
+        console.log('Authenticated user:', currentUser.email, 'UID:', currentUser.uid);
+        fetchTeachers();
       } else {
-        console.log('No user is authenticated in LevelScreen. Redirecting to LoginScreen.');
+        console.log('No authenticated user found. Redirecting to LoginScreen.');
         navigation.navigate('LoginScreen');
       }
     });
-
     return () => unsubscribe();
   }, [navigation]);
 
-  const fetchStudents = async () => {
+  const fetchTeachers = async () => {
     try {
-      console.log('Fetching students for path:', `students/levels/level${level}`);
-      const querySnapshot = await getDocs(collection(db, 'students', 'levels', `level${level}`));
-      const studentList = querySnapshot.docs.map(doc => ({ ...doc.data(), docId: doc.id }));
-      setStudents(studentList);
-      setFilteredStudents(studentList);
-      console.log('Students fetched successfully:', studentList);
+      const querySnapshot = await getDocs(collection(db, 'teachers'));
+      const teacherList = querySnapshot.docs.map(doc => ({ ...doc.data(), docId: doc.id }));
+      setTeachers(teacherList);
+      setFilteredTeachers(teacherList);
     } catch (error) {
-      console.error('Error fetching students:', error);
-      Alert.alert('Error', 'Failed to fetch students: ' + error.message);
+      console.error('Error fetching teachers:', error.message);
+      if (error.code === 'permission-denied') {
+        Alert.alert('Permission Error', 'You do not have permission to view teachers.');
+      } else {
+        Alert.alert('Error', 'Failed to fetch teachers: ' + error.message);
+      }
     }
   };
 
@@ -106,7 +104,6 @@ const LevelScreen = ({ route, navigation }) => {
 
     if (!result.canceled) {
       setImage(result.assets[0].uri);
-      console.log('Image picked:', result.assets[0].uri);
     }
   };
 
@@ -116,12 +113,12 @@ const LevelScreen = ({ route, navigation }) => {
       if (Platform.OS === 'web') {
         const response = await fetch(imageUri);
         const blob = await response.blob();
-        formData.append('file', blob, 'student.jpg');
+        formData.append('file', blob, 'teacher.jpg');
       } else {
         formData.append('file', {
           uri: imageUri,
           type: 'image/jpeg',
-          name: 'student.jpg',
+          name: 'teacher.jpg',
         });
       }
       formData.append('upload_preset', 'student_upload');
@@ -133,93 +130,131 @@ const LevelScreen = ({ route, navigation }) => {
       });
 
       const result = await response.json();
-      console.log('Cloudinary API Response:', result);
       if (result.secure_url) {
         return result.secure_url;
       } else {
         throw new Error('Cloudinary upload failed: ' + (result.error?.message || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Image upload error details:', error);
       throw new Error('Image upload to Cloudinary failed: ' + error.message);
     }
   };
 
-  const addStudent = async () => {
-    if (!name || !id || !age || !dob || !studentClass || !email || !password) {
+  const addTeacher = async () => {
+    if (!name || !age || !dob || !assignedClass || !email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
+    // Ensure the current user is the admin
+    if (!auth.currentUser || auth.currentUser.email !== 'admin@admin.com') {
+      Alert.alert('Permission Error', 'Only the admin (admin@admin.com) can add teachers.');
+      navigation.navigate('LoginScreen');
+      return;
+    }
+
+    // Validate email format
+    if (!isValidEmail(email)) {
+      Alert.alert('Error', 'Please enter a valid email address (e.g., teacher@example.com).');
+      return;
+    }
+
     try {
+      // Check if the email is already in use
+      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+      let userUid;
+
+      if (signInMethods.length > 0) {
+        // Email already exists, check if it's already a teacher
+        const teacherQuery = query(collection(db, 'teachers'), where('email', '==', email));
+        const teacherSnapshot = await getDocs(teacherQuery);
+        if (!teacherSnapshot.empty) {
+          Alert.alert('Error', 'This email is already assigned to a teacher.');
+          return;
+        }
+        Alert.alert(
+          'Email Already in Use',
+          'This email is already registered. Do you want to assign this existing account as a teacher? (Note: UID cannot be determined client-side.)',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Yes',
+              onPress: () => {
+                Alert.alert('Error', 'Cannot assign existing account client-side. Use a new email or contact support.');
+              },
+            },
+          ]
+        );
+        return;
+      }
+
+      // Email is not in use, create a new user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      console.log('User authenticated:', user.uid);
+      userUid = userCredential.user.uid;
 
       let imageUrl = null;
       if (image) {
-        try {
-          imageUrl = await uploadImageToCloudinary(image);
-          console.log('Image uploaded to Cloudinary:', imageUrl);
-        } catch (uploadError) {
-          console.error('Image upload failed:', uploadError);
-          Alert.alert('Warning', 'Student added, but image upload failed: ' + uploadError.message);
-        }
+        imageUrl = await uploadImageToCloudinary(image);
       }
 
-      const studentData = { name, id, age, dob, studentClass, email, uid: user.uid, imageUrl };
-      await addDoc(collection(db, 'students', 'levels', `level${level}`), studentData);
+      const teacherData = { name, age, dob, assignedClass, email, uid: userUid, imageUrl };
+      await addDoc(collection(db, 'teachers'), teacherData);
 
-      Alert.alert('Success', 'Student added successfully');
+      Alert.alert('Success', 'Teacher added successfully');
       clearInputs();
       setModalVisible(false);
-      fetchStudents();
+      fetchTeachers();
     } catch (error) {
-      console.error('Add student error:', error);
-      Alert.alert('Error', error.message);
+      console.error('Add teacher error:', error);
+      if (error.code === 'auth/invalid-email') {
+        Alert.alert('Error', 'The email address is invalid. Please enter a valid email (e.g., teacher@example.com).');
+      } else if (error.code === 'permission-denied') {
+        Alert.alert(
+          'Permission Error',
+          'You do not have sufficient permissions to add a teacher. Ensure you are logged in as admin@admin.com.'
+        );
+      } else if (error.code === 'auth/email-already-in-use') {
+        Alert.alert('Error', 'This email is already in use by another account.');
+      } else {
+        Alert.alert('Error', error.message);
+      }
     }
   };
 
-  const editStudent = async () => {
-    if (!name || !id || !age || !dob || !studentClass || !email) {
+  const editTeacher = async () => {
+    if (!name || !age || !dob || !assignedClass || !email) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
     try {
-      let imageUrl = selectedStudent.imageUrl;
+      let imageUrl = selectedTeacher.imageUrl;
       if (image) {
-        try {
-          imageUrl = await uploadImageToCloudinary(image);
-          console.log('Updated image uploaded to Cloudinary:', imageUrl);
-        } catch (uploadError) {
-          console.error('Image upload failed:', uploadError);
-          Alert.alert('Warning', 'Student updated, but image upload failed: ' + uploadError.message);
-        }
+        imageUrl = await uploadImageToCloudinary(image);
       }
 
-      const updatedStudentData = { name, id, age, dob, studentClass, email, imageUrl };
-      await updateDoc(doc(db, 'students', 'levels', `level${level}`, selectedStudent.docId), updatedStudentData);
+      const updatedTeacherData = { name, age, dob, assignedClass, email, imageUrl };
+      await updateDoc(doc(db, 'teachers', selectedTeacher.docId), updatedTeacherData);
 
-      Alert.alert('Success', 'Student updated successfully');
+      Alert.alert('Success', 'Teacher updated successfully');
       clearInputs();
       setEditModalVisible(false);
       setDetailsModalVisible(false);
-      fetchStudents();
+      fetchTeachers();
     } catch (error) {
-      console.error('Edit student error:', error);
+      console.error('Edit teacher error:', error);
       Alert.alert('Error', error.message);
     }
   };
 
-  const deleteStudent = async (docId) => {
+  const deleteTeacher = async (docId) => {
     try {
-      await deleteDoc(doc(db, 'students', 'levels', `level${level}`, docId));
-      Alert.alert('Success', 'Student deleted');
+      await deleteDoc(doc(db, 'teachers', docId));
+      Alert.alert('Success', 'Teacher deleted');
       setDetailsModalVisible(false);
-      fetchStudents();
+      fetchTeachers();
     } catch (error) {
-      console.error('Error deleting student:', error);
+      console.error('Error deleting teacher:', error);
       Alert.alert('Error', error.message);
     }
   };
@@ -236,10 +271,9 @@ const LevelScreen = ({ route, navigation }) => {
 
   const clearInputs = () => {
     setName('');
-    setId('');
     setAge('');
     setDob('');
-    setStudentClass('');
+    setAssignedClass('');
     setEmail('');
     setPassword('');
     setImage(null);
@@ -248,35 +282,30 @@ const LevelScreen = ({ route, navigation }) => {
   const handleSearch = (query) => {
     setSearchQuery(query);
     if (query.trim() === '') {
-      setFilteredStudents(students);
+      setFilteredTeachers(teachers);
     } else {
       const lowerQuery = query.toLowerCase();
-      const filtered = students.filter(
-        (student) =>
-          student.name.toLowerCase().includes(lowerQuery) ||
-          student.id.toLowerCase().includes(lowerQuery) ||
-          student.email.toLowerCase().includes(lowerQuery)
+      const filtered = teachers.filter(
+        (teacher) =>
+          teacher.name.toLowerCase().includes(lowerQuery) ||
+          teacher.email.toLowerCase().includes(lowerQuery)
       );
-      setFilteredStudents(filtered);
+      setFilteredTeachers(filtered);
     }
   };
 
-  const openEditModal = (student) => {
-    setSelectedStudent(student);
-    setName(student.name);
-    setId(student.id);
-    setAge(student.age);
-    setDob(student.dob);
-    setStudentClass(student.studentClass || '');
-    setEmail(student.email);
-    setImage(null); // Reset image to allow uploading a new one
+  const openEditModal = (teacher) => {
+    setSelectedTeacher(teacher);
+    setName(teacher.name);
+    setAge(teacher.age);
+    setDob(teacher.dob);
+    setAssignedClass(teacher.assignedClass || '');
+    setEmail(teacher.email);
+    setImage(null);
     setEditModalVisible(true);
   };
 
   const openClassModal = () => {
-    console.log('Opening class modal for level:', level);
-    console.log('Available classes:', levelClasses[level]);
-    // Track which parent modal is open
     if (modalVisible) {
       setParentModal('add');
       setModalVisible(false);
@@ -285,38 +314,33 @@ const LevelScreen = ({ route, navigation }) => {
       setEditModalVisible(false);
     }
     setClassModalVisible(true);
-    console.log('Class modal visibility set to true');
   };
 
   const closeClassModal = () => {
-    console.log('Closing class modal');
     setClassModalVisible(false);
-    // Re-open the parent modal
     if (parentModal === 'add') {
       setModalVisible(true);
     } else if (parentModal === 'edit') {
       setEditModalVisible(true);
     }
     setParentModal(null);
-    console.log('Class modal visibility set to false');
   };
 
   const selectClass = (className) => {
-    console.log('Selected class:', className);
-    setStudentClass(className);
+    setAssignedClass(className);
     closeClassModal();
   };
 
-  const renderStudent = ({ item }) => (
+  const renderTeacher = ({ item }) => (
     <TouchableOpacity
-      style={styles.studentItem}
+      style={styles.teacherItem}
       onPress={() => {
-        setSelectedStudent(item);
+        setSelectedTeacher(item);
         setDetailsModalVisible(true);
       }}
     >
-      {item.imageUrl && <Image source={{ uri: item.imageUrl }} style={styles.studentImage} />}
-      <Text style={styles.studentName}>{item.name}</Text>
+      {item.imageUrl && <Image source={{ uri: item.imageUrl }} style={styles.teacherImage} />}
+      <Text style={styles.teacherName}>{item.name}</Text>
     </TouchableOpacity>
   );
 
@@ -334,18 +358,19 @@ const LevelScreen = ({ route, navigation }) => {
     <PaperProvider>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.screen}>
+          <Text style={styles.title}>Teachers</Text>
           <TextInput
             style={styles.searchBar}
-            placeholder="Search students by name, ID, or email..."
+            placeholder="Search teachers by name or email..."
             value={searchQuery}
             onChangeText={handleSearch}
             autoCapitalize="none"
           />
           <FlatList
-            data={filteredStudents}
-            renderItem={renderStudent}
+            data={filteredTeachers}
+            renderItem={renderTeacher}
             keyExtractor={item => item.docId}
-            style={styles.studentList}
+            style={styles.teacherList}
           />
           <TouchableOpacity
             style={styles.addButton}
@@ -356,24 +381,16 @@ const LevelScreen = ({ route, navigation }) => {
           >
             <Text style={styles.addButtonText}>+</Text>
           </TouchableOpacity>
-          {/* Add Student Modal */}
+          {/* Add Teacher Modal */}
           <Modal visible={modalVisible} animationType="slide" transparent>
             <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Add Student to {levelNames[level]}</Text>
+              <ScrollView contentContainerStyle={styles.modalContent}>
+                <Text style={styles.modalTitle}>Add Teacher</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Name"
                   value={name}
                   onChangeText={setName}
-                  keyboardType="default"
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="ID"
-                  value={id}
-                  onChangeText={setId}
-                  keyboardType="numeric"
                 />
                 <TextInput
                   style={styles.input}
@@ -389,13 +406,8 @@ const LevelScreen = ({ route, navigation }) => {
                   onChangeText={setDob}
                   keyboardType="numbers-and-punctuation"
                 />
-                <TouchableOpacity
-                  style={styles.dropdownButton}
-                  onPress={openClassModal}
-                >
-                  <Text style={styles.dropdownText}>
-                    {studentClass || 'Select Class'}
-                  </Text>
+                <TouchableOpacity style={styles.dropdownButton} onPress={openClassModal}>
+                  <Text style={styles.dropdownText}>{assignedClass || 'Select Class'}</Text>
                 </TouchableOpacity>
                 <TextInput
                   style={styles.input}
@@ -410,18 +422,17 @@ const LevelScreen = ({ route, navigation }) => {
                   placeholder="Password"
                   value={password}
                   onChangeText={setPassword}
-                  keyboardType="default"
                   secureTextEntry
                 />
                 <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
                   <Text style={styles.imagePickerText}>
-                    {image ? 'Image Selected' : 'Pick Student Image'}
+                    {image ? 'Image Selected' : 'Pick Teacher Image'}
                   </Text>
                 </TouchableOpacity>
                 {image && <Image source={{ uri: image }} style={styles.previewImage} />}
                 <Button
                   mode="contained"
-                  onPress={addStudent}
+                  onPress={addTeacher}
                   style={styles.modalButton}
                   buttonColor="#FF5733"
                 >
@@ -435,27 +446,19 @@ const LevelScreen = ({ route, navigation }) => {
                 >
                   Cancel
                 </Button>
-              </View>
+              </ScrollView>
             </View>
           </Modal>
-          {/* Edit Student Modal */}
+          {/* Edit Teacher Modal */}
           <Modal visible={editModalVisible} animationType="slide" transparent>
             <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Edit Student in {levelNames[level]}</Text>
+              <ScrollView contentContainerStyle={styles.modalContent}>
+                <Text style={styles.modalTitle}>Edit Teacher</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Name"
                   value={name}
                   onChangeText={setName}
-                  keyboardType="default"
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="ID"
-                  value={id}
-                  onChangeText={setId}
-                  keyboardType="numeric"
                 />
                 <TextInput
                   style={styles.input}
@@ -471,13 +474,8 @@ const LevelScreen = ({ route, navigation }) => {
                   onChangeText={setDob}
                   keyboardType="numbers-and-punctuation"
                 />
-                <TouchableOpacity
-                  style={styles.dropdownButton}
-                  onPress={openClassModal}
-                >
-                  <Text style={styles.dropdownText}>
-                    {studentClass || 'Select Class'}
-                  </Text>
+                <TouchableOpacity style={styles.dropdownButton} onPress={openClassModal}>
+                  <Text style={styles.dropdownText}>{assignedClass || 'Select Class'}</Text>
                 </TouchableOpacity>
                 <TextInput
                   style={styles.input}
@@ -489,16 +487,16 @@ const LevelScreen = ({ route, navigation }) => {
                 />
                 <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
                   <Text style={styles.imagePickerText}>
-                    {image ? 'Image Selected' : 'Pick New Student Image'}
+                    {image ? 'Image Selected' : 'Pick New Teacher Image'}
                   </Text>
                 </TouchableOpacity>
                 {image && <Image source={{ uri: image }} style={styles.previewImage} />}
-                {selectedStudent?.imageUrl && !image && (
-                  <Image source={{ uri: selectedStudent.imageUrl }} style={styles.previewImage} />
+                {selectedTeacher?.imageUrl && !image && (
+                  <Image source={{ uri: selectedTeacher.imageUrl }} style={styles.previewImage} />
                 )}
                 <Button
                   mode="contained"
-                  onPress={editStudent}
+                  onPress={editTeacher}
                   style={styles.modalButton}
                   buttonColor="#FF5733"
                 >
@@ -512,52 +510,45 @@ const LevelScreen = ({ route, navigation }) => {
                 >
                   Cancel
                 </Button>
+              </ScrollView>
+            </View>
+          </Modal>
+          {/* Class Selection Modal */}
+          <Modal visible={classModalVisible} animationType="fade" transparent>
+            <View style={styles.classModalContainer}>
+              <View style={styles.classModalContent}>
+                <Text style={styles.modalTitle}>Select Class</Text>
+                <ScrollView>
+                  {allClasses.map(className => renderClassOption(className))}
+                </ScrollView>
+                <Button
+                  mode="outlined"
+                  onPress={closeClassModal}
+                  style={styles.modalButton}
+                  textColor="#FF5733"
+                >
+                  Cancel
+                </Button>
               </View>
             </View>
           </Modal>
-          {/* Class Selection Modal (Custom Dropdown) */}
-          {classModalVisible && (
-            <Modal visible={classModalVisible} animationType="fade" transparent>
-              <View style={styles.classModalContainer}>
-                <View style={styles.classModalContent}>
-                  <Text style={styles.modalTitle}>Select Class</Text>
-                  <ScrollView>
-                    {levelClasses[level] && levelClasses[level].length > 0 ? (
-                      levelClasses[level].map(className => renderClassOption(className))
-                    ) : (
-                      <Text style={styles.classOptionText}>No classes available</Text>
-                    )}
-                  </ScrollView>
-                  <Button
-                    mode="outlined"
-                    onPress={closeClassModal}
-                    style={styles.modalButton}
-                    textColor="#FF5733"
-                  >
-                    Cancel
-                  </Button>
-                </View>
-              </View>
-            </Modal>
-          )}
-          {/* Student Details Modal */}
+          {/* Teacher Details Modal */}
           <Modal visible={detailsModalVisible} animationType="slide" transparent>
             <View style={styles.modalContainer}>
               <View style={styles.modalContent}>
-                {selectedStudent && (
+                {selectedTeacher && (
                   <>
-                    <Text style={styles.modalTitle}>{selectedStudent.name}</Text>
-                    {selectedStudent.imageUrl && (
-                      <Image source={{ uri: selectedStudent.imageUrl }} style={styles.modalImage} />
+                    <Text style={styles.modalTitle}>{selectedTeacher.name}</Text>
+                    {selectedTeacher.imageUrl && (
+                      <Image source={{ uri: selectedTeacher.imageUrl }} style={styles.modalImage} />
                     )}
-                    <Text style={styles.detailText}>ID: {selectedStudent.id}</Text>
-                    <Text style={styles.detailText}>Age: {selectedStudent.age}</Text>
-                    <Text style={styles.detailText}>DOB: {selectedStudent.dob}</Text>
-                    <Text style={styles.detailText}>Class: {selectedStudent.studentClass || 'Not set'}</Text>
-                    <Text style={styles.detailText}>Email: {selectedStudent.email}</Text>
+                    <Text style={styles.detailText}>Age: {selectedTeacher.age}</Text>
+                    <Text style={styles.detailText}>DOB: {selectedTeacher.dob}</Text>
+                    <Text style={styles.detailText}>Class: {selectedTeacher.assignedClass || 'Not set'}</Text>
+                    <Text style={styles.detailText}>Email: {selectedTeacher.email}</Text>
                     <Button
                       mode="outlined"
-                      onPress={() => openEditModal(selectedStudent)}
+                      onPress={() => openEditModal(selectedTeacher)}
                       style={styles.smallEditButton}
                       textColor="#FF5733"
                       labelStyle={styles.smallButtonText}
@@ -566,7 +557,7 @@ const LevelScreen = ({ route, navigation }) => {
                     </Button>
                     <Button
                       mode="outlined"
-                      onPress={() => resetPassword(selectedStudent.email)}
+                      onPress={() => resetPassword(selectedTeacher.email)}
                       style={styles.smallResetButton}
                       textColor="#FF5733"
                       labelStyle={styles.smallButtonText}
@@ -575,7 +566,7 @@ const LevelScreen = ({ route, navigation }) => {
                     </Button>
                     <Button
                       mode="outlined"
-                      onPress={() => deleteStudent(selectedStudent.docId)}
+                      onPress={() => deleteTeacher(selectedTeacher.docId)}
                       style={styles.smallDeleteButton}
                       textColor="#FF5733"
                       labelStyle={styles.smallButtonText}
@@ -604,12 +595,20 @@ const LevelScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff', // Match screen background color
+    backgroundColor: '#fff',
   },
   screen: {
     flex: 1,
     backgroundColor: '#fff',
     paddingVertical: SCREEN_HEIGHT * 0.03,
+    paddingHorizontal: SCREEN_WIDTH * 0.05,
+  },
+  title: {
+    fontSize: SCREEN_WIDTH * 0.08,
+    fontWeight: 'bold',
+    color: '#FF5733',
+    textAlign: 'center',
+    marginBottom: SCREEN_HEIGHT * 0.02,
   },
   searchBar: {
     height: SCREEN_HEIGHT * 0.06,
@@ -617,29 +616,32 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 10,
-    marginHorizontal: SCREEN_WIDTH * 0.05,
     marginBottom: SCREEN_HEIGHT * 0.02,
     backgroundColor: '#f5f5f5',
   },
-  studentList: {
+  teacherList: {
     flex: 1,
   },
-  studentItem: {
+  teacherItem: {
     flexDirection: 'row',
     padding: SCREEN_WIDTH * 0.03,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    marginBottom: SCREEN_HEIGHT * 0.01,
   },
-  studentImage: {
+  teacherImage: {
     width: SCREEN_WIDTH * 0.15,
     height: SCREEN_WIDTH * 0.15,
     borderRadius: 5,
     marginRight: SCREEN_WIDTH * 0.03,
   },
-  studentName: {
+  teacherName: {
     fontSize: SCREEN_WIDTH * 0.045,
     fontWeight: 'bold',
+    color: '#333',
   },
   addButton: {
     position: 'absolute',
@@ -687,6 +689,7 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: SCREEN_WIDTH * 0.04,
     marginBottom: SCREEN_HEIGHT * 0.01,
+    color: '#333',
   },
   smallEditButton: {
     marginVertical: SCREEN_HEIGHT * 0.01,
@@ -717,6 +720,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: SCREEN_HEIGHT * 0.015,
     width: '100%',
+    backgroundColor: '#f5f5f5',
   },
   dropdownButton: {
     height: SCREEN_HEIGHT * 0.06,
@@ -727,6 +731,7 @@ const styles = StyleSheet.create({
     marginBottom: SCREEN_HEIGHT * 0.015,
     width: '100%',
     justifyContent: 'center',
+    backgroundColor: '#f5f5f5',
   },
   dropdownText: {
     color: '#333',
@@ -766,9 +771,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: SCREEN_HEIGHT * 0.015,
     width: '100%',
+    backgroundColor: '#f5f5f5',
   },
   imagePickerText: {
     color: '#333',
+    fontSize: SCREEN_WIDTH * 0.04,
   },
   previewImage: {
     width: SCREEN_WIDTH * 0.3,
@@ -783,4 +790,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LevelScreen;
+export default Teachers;

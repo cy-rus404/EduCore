@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+  SafeAreaView, // Added SafeAreaView import
+} from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { db, auth } from './firebase';
 import { setDoc, doc } from 'firebase/firestore';
@@ -51,26 +58,32 @@ const Students = ({ navigation }) => {
 
   return (
     <PaperProvider>
-      <View style={styles.screen}>
-        <Text style={styles.title}>Students</Text>
-        <View style={styles.levelContainer}>
-          {[100, 200, 300, 400].map(level => (
-            <TouchableOpacity
-              key={level}
-              style={styles.levelBox}
-              onPress={() => navigateToLevel(level)}
-            >
-              {/* Display the new name instead of "Level {level}" */}
-              <Text style={styles.levelText}>{levelNames[level]}</Text>
-            </TouchableOpacity>
-          ))}
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.screen}>
+          <Text style={styles.title}>Classes</Text>
+          <View style={styles.levelContainer}>
+            {[100, 200, 300, 400].map(level => (
+              <TouchableOpacity
+                key={level}
+                style={styles.levelBox}
+                onPress={() => navigateToLevel(level)}
+              >
+                {/* Display the new name instead of "Level {level}" */}
+                <Text style={styles.levelText}>{levelNames[level]}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
-      </View>
+      </SafeAreaView>
     </PaperProvider>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff', // Match screen background color
+  },
   screen: {
     flex: 1,
     backgroundColor: '#fff',
