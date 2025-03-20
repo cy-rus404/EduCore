@@ -11,22 +11,22 @@ import {
 import { Provider as PaperProvider, Button } from 'react-native-paper';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 
-// Import existing images
-import image1 from '../assets/images/announce.png'; // For Announcements
-import image2 from '../assets/images/table.png';    // For Timetable
-import image3 from '../assets/images/grade.png';   // For Grade
-import image4 from '../assets/images/set.png';     // For Settings
+import image1 from '../assets/images/announce.png';
+import image2 from '../assets/images/table.png';
+import image3 from '../assets/images/grade.png';
+import image4 from '../assets/images/set.png';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const StudentDashboard = ({ navigation }) => {
   const [studentData, setStudentData] = useState({ name: '', id: '', imageUrl: null });
   const [user, setUser] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
         fetchStudentData(currentUser.uid);
@@ -35,7 +35,19 @@ const StudentDashboard = ({ navigation }) => {
       }
     });
 
-    return () => unsubscribe();
+    const q = query(collection(db, 'announcements'));
+    const unsubscribeAnnouncements = onSnapshot(q, (snapshot) => {
+      const announcements = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const unread = announcements.filter(ann => !ann.read).length;
+      setUnreadCount(unread);
+    }, (error) => {
+      console.error('Error fetching announcements:', error);
+    });
+
+    return () => {
+      unsubscribeAuth();
+      unsubscribeAnnouncements();
+    };
   }, [navigation]);
 
   const fetchStudentData = async (uid) => {
@@ -77,7 +89,6 @@ const StudentDashboard = ({ navigation }) => {
     <PaperProvider>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.screen}>
-          {/* Student Profile Box */}
           <View style={styles.profileBox}>
             {studentData.imageUrl ? (
               <Image source={{ uri: studentData.imageUrl }} style={styles.studentImage} />
@@ -90,9 +101,14 @@ const StudentDashboard = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Navigation Boxes */}
-          <View style={styles.boxContainer}>
-            <TouchableOpacity style={styles.box} onPress={() => navigateTo('Announcements')}>
+          {/* Top Row: Announcements and Timetable */}
+          <View style={styles.rowContainer}>
+            <TouchableOpacity style={styles.box} onPress={() => navigateTo('StudentAnnouncements')}>
+              {unreadCount > 0 && (
+                <View style={styles.unreadBadge}>
+                  <Text style={styles.unreadText}>{unreadCount}</Text>
+                </View>
+              )}
               <Image source={image1} style={styles.boxImage} />
               <Text style={styles.boxText}>Announcements</Text>
             </TouchableOpacity>
@@ -101,7 +117,10 @@ const StudentDashboard = ({ navigation }) => {
               <Image source={image2} style={styles.boxImage} />
               <Text style={styles.boxText}>Timetable</Text>
             </TouchableOpacity>
+          </View>
 
+          {/* Bottom Row: Grade and Settings */}
+          <View style={styles.rowContainer}>
             <TouchableOpacity style={styles.box} onPress={() => navigateTo('Grade')}>
               <Image source={image3} style={styles.boxImage} />
               <Text style={styles.boxText}>Grade</Text>
@@ -113,7 +132,6 @@ const StudentDashboard = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          {/* Transparent Logout Button */}
           <Button
             mode="outlined"
             onPress={handleLogout}
@@ -144,22 +162,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
     borderRadius: 10,
-    padding: SCREEN_WIDTH * 0.03,
+    padding: SCREEN_WIDTH * 0.05,
     marginBottom: SCREEN_HEIGHT * 0.03,
     borderWidth: 1,
     borderColor: '#ccc',
     elevation: 3,
+    width: SCREEN_WIDTH * 0.9,
+    alignSelf: 'center',
   },
   studentImage: {
-    width: SCREEN_WIDTH * 0.1,  // Reduced from 0.15 to 0.1 (33% smaller)
-    height: SCREEN_WIDTH * 0.1, // Reduced from 0.15 to 0.1
-    borderRadius: SCREEN_WIDTH * 0.05, // Adjusted for smaller size
+    width: SCREEN_WIDTH * 0.1,
+    height: SCREEN_WIDTH * 0.1,
+    borderRadius: SCREEN_WIDTH * 0.05,
     marginRight: SCREEN_WIDTH * 0.03,
   },
   placeholderImage: {
-    width: SCREEN_WIDTH * 0.1,  // Reduced from 0.15 to 0.1
-    height: SCREEN_WIDTH * 0.1, // Reduced from 0.15 to 0.1
-    borderRadius: SCREEN_WIDTH * 0.05, // Adjusted for smaller size
+    width: SCREEN_WIDTH * 0.1,
+    height: SCREEN_WIDTH * 0.1,
+    borderRadius: SCREEN_WIDTH * 0.05,
     backgroundColor: '#ccc',
     marginRight: SCREEN_WIDTH * 0.03,
   },
@@ -175,26 +195,27 @@ const styles = StyleSheet.create({
     fontSize: SCREEN_WIDTH * 0.04,
     color: '#333',
   },
-  boxContainer: {
+  rowContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    marginBottom: SCREEN_HEIGHT * 0.05,
+    justifyContent: 'space-between',
+    marginBottom: SCREEN_HEIGHT * 0.03,
+    width: '100%',
   },
   box: {
-    width: SCREEN_WIDTH * 0.4,
-    height: SCREEN_HEIGHT * 0.15, // Reduced from 0.2 to 0.15 to accommodate smaller images
-    margin: SCREEN_WIDTH * 0.02,
+    width: SCREEN_WIDTH * 0.42,
+    height: SCREEN_HEIGHT * 0.18,
+    marginHorizontal: SCREEN_WIDTH * 0.02,
     backgroundColor: '#FF5733',
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 3,
+    position: 'relative', // For positioning the badge
   },
   boxImage: {
-    width: '70%',  // Reduced from 100% to 70% of box width
-    height: '50%', // Reduced from 70% to 50% of box height
-    resizeMode: 'contain', // Changed to 'contain' to avoid cropping
+    width: '70%',
+    height: '50%',
+    resizeMode: 'contain',
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
   },
@@ -203,6 +224,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginTop: SCREEN_HEIGHT * 0.01,
+  },
+  unreadBadge: {
+    position: 'absolute',
+    top: -SCREEN_HEIGHT * 0.01, // Slightly above the box
+    right: -SCREEN_WIDTH * 0.01, // Slightly to the right
+    backgroundColor: 'red',
+    borderRadius: SCREEN_WIDTH * 0.03, // Circular badge
+    width: SCREEN_WIDTH * 0.06,
+    height: SCREEN_WIDTH * 0.06,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+  },
+  unreadText: {
+    color: '#fff',
+    fontSize: SCREEN_WIDTH * 0.035,
+    fontWeight: 'bold',
   },
   logoutButton: {
     marginTop: 'auto',
