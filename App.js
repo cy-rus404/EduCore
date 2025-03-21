@@ -39,26 +39,10 @@ export default function App() {
 
 
 
-        <Stack.Screen
-          name="Level100"
-          component={LevelScreen}
-          initialParams={{ level: 100 }}
-        />
-        <Stack.Screen
-          name="Level200"
-          component={LevelScreen}
-          initialParams={{ level: 200 }}
-        />
-        <Stack.Screen
-          name="Level300"
-          component={LevelScreen}
-          initialParams={{ level: 300 }}
-        />
-        <Stack.Screen
-          name="Level400"
-          component={LevelScreen}
-          initialParams={{ level: 400 }}
-        />
+        <Stack.Screen name="LevelKindergarten" component={LevelScreen} />
+<Stack.Screen name="LevelLower Primary" component={LevelScreen} />
+<Stack.Screen name="LevelUpper Primary" component={LevelScreen} />
+<Stack.Screen name="LevelJHS" component={LevelScreen} />
 
       </Stack.Navigator>
     </NavigationContainer>

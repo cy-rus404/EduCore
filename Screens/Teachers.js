@@ -17,26 +17,18 @@ import {
 import { Provider as PaperProvider, Button } from 'react-native-paper';
 import { db, auth } from './firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, where } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, fetchSignInMethodsForEmail } from 'firebase/auth';
+import { createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from 'firebase/auth';
 import * as ImagePicker from 'expo-image-picker';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const CLOUD_NAME = 'dvhylo4ih';
 
-const levelClasses = {
-  100: ['Creche', 'Nursery', 'Kindergarten 1', 'Kindergarten 2'],
-  200: ['Class 1', 'Class 2', 'Class 3'],
-  300: ['Class 4', 'Class 5', 'Class 6'],
-  400: ['JHS 1', 'JHS 2', 'JHS 3'],
-};
-
-const allClasses = Object.values(levelClasses).flat();
-
-// Simple email validation regex
-const isValidEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+const levelOptions = {
+  'Kindergarten': 'Kindergarten',
+  'Lower Primary': 'Lower Primary',
+  'Upper Primary': 'Upper Primary',
+  'JHS': 'JHS',
 };
 
 const Teachers = ({ navigation }) => {
@@ -80,11 +72,7 @@ const Teachers = ({ navigation }) => {
       setFilteredTeachers(teacherList);
     } catch (error) {
       console.error('Error fetching teachers:', error.message);
-      if (error.code === 'permission-denied') {
-        Alert.alert('Permission Error', 'You do not have permission to view teachers.');
-      } else {
-        Alert.alert('Error', 'Failed to fetch teachers: ' + error.message);
-      }
+      Alert.alert('Error', 'Failed to fetch teachers: ' + error.message);
     }
   };
 
@@ -146,51 +134,15 @@ const Teachers = ({ navigation }) => {
       return;
     }
 
-    // Ensure the current user is the admin
     if (!auth.currentUser || auth.currentUser.email !== 'admin@admin.com') {
       Alert.alert('Permission Error', 'Only the admin (admin@admin.com) can add teachers.');
       navigation.navigate('LoginScreen');
       return;
     }
 
-    // Validate email format
-    if (!isValidEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address (e.g., teacher@example.com).');
-      return;
-    }
-
     try {
-      // Check if the email is already in use
-      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-      let userUid;
-
-      if (signInMethods.length > 0) {
-        // Email already exists, check if it's already a teacher
-        const teacherQuery = query(collection(db, 'teachers'), where('email', '==', email));
-        const teacherSnapshot = await getDocs(teacherQuery);
-        if (!teacherSnapshot.empty) {
-          Alert.alert('Error', 'This email is already assigned to a teacher.');
-          return;
-        }
-        Alert.alert(
-          'Email Already in Use',
-          'This email is already registered. Do you want to assign this existing account as a teacher? (Note: UID cannot be determined client-side.)',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Yes',
-              onPress: () => {
-                Alert.alert('Error', 'Cannot assign existing account client-side. Use a new email or contact support.');
-              },
-            },
-          ]
-        );
-        return;
-      }
-
-      // Email is not in use, create a new user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      userUid = userCredential.user.uid;
+      const userUid = userCredential.user.uid;
 
       let imageUrl = null;
       if (image) {
@@ -206,18 +158,7 @@ const Teachers = ({ navigation }) => {
       fetchTeachers();
     } catch (error) {
       console.error('Add teacher error:', error);
-      if (error.code === 'auth/invalid-email') {
-        Alert.alert('Error', 'The email address is invalid. Please enter a valid email (e.g., teacher@example.com).');
-      } else if (error.code === 'permission-denied') {
-        Alert.alert(
-          'Permission Error',
-          'You do not have sufficient permissions to add a teacher. Ensure you are logged in as admin@admin.com.'
-        );
-      } else if (error.code === 'auth/email-already-in-use') {
-        Alert.alert('Error', 'This email is already in use by another account.');
-      } else {
-        Alert.alert('Error', error.message);
-      }
+      Alert.alert('Error', error.message);
     }
   };
 
@@ -326,8 +267,8 @@ const Teachers = ({ navigation }) => {
     setParentModal(null);
   };
 
-  const selectClass = (className) => {
-    setAssignedClass(className);
+  const selectClass = (level) => {
+    setAssignedClass(level);
     closeClassModal();
   };
 
@@ -344,13 +285,13 @@ const Teachers = ({ navigation }) => {
     </TouchableOpacity>
   );
 
-  const renderClassOption = (className) => (
+  const renderClassOption = (level) => (
     <TouchableOpacity
-      key={className}
+      key={level}
       style={styles.classOption}
-      onPress={() => selectClass(className)}
+      onPress={() => selectClass(level)}
     >
-      <Text style={styles.classOptionText}>{className}</Text>
+      <Text style={styles.classOptionText}>{levelOptions[level]}</Text>
     </TouchableOpacity>
   );
 
@@ -407,7 +348,7 @@ const Teachers = ({ navigation }) => {
                   keyboardType="numbers-and-punctuation"
                 />
                 <TouchableOpacity style={styles.dropdownButton} onPress={openClassModal}>
-                  <Text style={styles.dropdownText}>{assignedClass || 'Select Class'}</Text>
+                  <Text style={styles.dropdownText}>{assignedClass ? levelOptions[assignedClass] : 'Select Level'}</Text>
                 </TouchableOpacity>
                 <TextInput
                   style={styles.input}
@@ -475,7 +416,7 @@ const Teachers = ({ navigation }) => {
                   keyboardType="numbers-and-punctuation"
                 />
                 <TouchableOpacity style={styles.dropdownButton} onPress={openClassModal}>
-                  <Text style={styles.dropdownText}>{assignedClass || 'Select Class'}</Text>
+                  <Text style={styles.dropdownText}>{assignedClass ? levelOptions[assignedClass] : 'Select Level'}</Text>
                 </TouchableOpacity>
                 <TextInput
                   style={styles.input}
@@ -517,9 +458,9 @@ const Teachers = ({ navigation }) => {
           <Modal visible={classModalVisible} animationType="fade" transparent>
             <View style={styles.classModalContainer}>
               <View style={styles.classModalContent}>
-                <Text style={styles.modalTitle}>Select Class</Text>
+                <Text style={styles.modalTitle}>Select Level</Text>
                 <ScrollView>
-                  {allClasses.map(className => renderClassOption(className))}
+                  {Object.keys(levelOptions).map(level => renderClassOption(level))}
                 </ScrollView>
                 <Button
                   mode="outlined"
@@ -544,7 +485,7 @@ const Teachers = ({ navigation }) => {
                     )}
                     <Text style={styles.detailText}>Age: {selectedTeacher.age}</Text>
                     <Text style={styles.detailText}>DOB: {selectedTeacher.dob}</Text>
-                    <Text style={styles.detailText}>Class: {selectedTeacher.assignedClass || 'Not set'}</Text>
+                    <Text style={styles.detailText}>Level: {levelOptions[selectedTeacher.assignedClass] || 'Not set'}</Text>
                     <Text style={styles.detailText}>Email: {selectedTeacher.email}</Text>
                     <Button
                       mode="outlined"

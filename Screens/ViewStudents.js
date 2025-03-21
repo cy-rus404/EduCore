@@ -15,6 +15,13 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+const levelNames = {
+  'Kindergarten': 'Kindergarten',
+  'Lower Primary': 'Lower Primary',
+  'Upper Primary': 'Upper Primary',
+  'JHS': 'JHS',
+};
+
 const ViewStudents = ({ navigation }) => {
   const [teacherClass, setTeacherClass] = useState(null);
   const [students, setStudents] = useState([]);
@@ -29,7 +36,6 @@ const ViewStudents = ({ navigation }) => {
       }
 
       try {
-        // Step 1: Fetch teacher's assigned class
         const teacherQuery = query(
           collection(db, 'teachers'),
           where('uid', '==', auth.currentUser.uid)
@@ -43,7 +49,7 @@ const ViewStudents = ({ navigation }) => {
         }
 
         const teacherData = teacherSnapshot.docs[0].data();
-        const assignedClass = teacherData.assignedClass;
+        const assignedClass = teacherData.assignedClass; // e.g., "Kindergarten"
 
         if (!assignedClass) {
           Alert.alert('Error', 'No class assigned to this teacher.');
@@ -51,11 +57,12 @@ const ViewStudents = ({ navigation }) => {
           return;
         }
 
+        console.log('Teacher assigned class:', assignedClass);
+
         setTeacherClass(assignedClass);
 
-        // Step 2: Fetch students in the assigned class
         const studentsQuery = query(
-          collection(db, `students/levels/${assignedClass}`)
+          collection(db, 'students', 'levels', assignedClass)
         );
         const studentsSnapshot = await getDocs(studentsQuery);
 
@@ -63,6 +70,8 @@ const ViewStudents = ({ navigation }) => {
           id: doc.id,
           ...doc.data(),
         }));
+
+        console.log('Fetched students:', studentsList);
 
         setStudents(studentsList);
         setLoading(false);
@@ -82,7 +91,7 @@ const ViewStudents = ({ navigation }) => {
       <View style={styles.studentInfo}>
         <Text style={styles.studentName}>{item.name}</Text>
         <Text style={styles.studentDetail}>Age: {item.age || 'N/A'}</Text>
-        {/* Add more student details as needed */}
+        <Text style={styles.studentDetail}>Class: {item.studentClass || 'N/A'}</Text>
       </View>
     </View>
   );
@@ -92,7 +101,7 @@ const ViewStudents = ({ navigation }) => {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.screen}>
           <Text style={styles.title}>
-            {teacherClass ? `Students in ${teacherClass}` : 'View Students'}
+            {teacherClass ? `Students in ${levelNames[teacherClass]}` : 'View Students'}
           </Text>
           {loading ? (
             <Text style={styles.loadingText}>Loading students...</Text>
@@ -105,7 +114,7 @@ const ViewStudents = ({ navigation }) => {
             />
           ) : (
             <Text style={styles.noStudentsText}>
-              No students found in {teacherClass || 'your class'}.
+              No students found in {teacherClass ? levelNames[teacherClass] : 'your class'}.
             </Text>
           )}
         </View>

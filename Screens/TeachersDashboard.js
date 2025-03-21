@@ -10,11 +10,10 @@ import {
   Image,
 } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
-import { auth, db } from './firebase'; // Import db for Firestore
+import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
-// Import local images (adjust paths based on your folder structure)
 const viewStudentsImage = require('../assets/images/stud.png');
 const gradeStudentsImage = require('../assets/images/grade.png');
 const attendanceImage = require('../assets/images/attend.png');
@@ -24,7 +23,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const TeachersDashboard = ({ navigation }) => {
   const [user, setUser] = useState(null);
-  const [teacherName, setTeacherName] = useState('Teacher'); // Default fallback
+  const [teacherName, setTeacherName] = useState('Teacher');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -36,7 +35,6 @@ const TeachersDashboard = ({ navigation }) => {
           navigation.navigate('LoginScreen');
           return;
         }
-        // Fetch teacher's name from Firestore
         fetchTeacherName(currentUser.uid);
       } else {
         console.log('No user found. Redirecting to LoginScreen.');
@@ -55,11 +53,11 @@ const TeachersDashboard = ({ navigation }) => {
         setTeacherName(teacherData.name || 'Teacher');
       } else {
         console.log('No teacher document found for UID:', uid);
-        setTeacherName('Teacher'); // Fallback if no match
+        setTeacherName('Teacher');
       }
     } catch (error) {
       console.error('Error fetching teacher name:', error.message);
-      setTeacherName('Teacher'); // Fallback on error
+      setTeacherName('Teacher');
     }
   };
 

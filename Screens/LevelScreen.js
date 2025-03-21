@@ -12,7 +12,7 @@ import {
   Dimensions,
   Platform,
   ScrollView,
-  SafeAreaView, // Added SafeAreaView import
+  SafeAreaView,
 } from 'react-native';
 import { Provider as PaperProvider, Button } from 'react-native-paper';
 import { db, auth } from './firebase';
@@ -24,20 +24,18 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const CLOUD_NAME = 'dvhylo4ih';
 
-// Map level numbers to new names and their respective classes
 const levelNames = {
-  100: 'Upper Pre-school',
-  200: 'Lower Primary',
-  300: 'Upper Primary',
-  400: 'JHS',
+  'Kindergarten': 'Kindergarten',
+  'Lower Primary': 'Lower Primary',
+  'Upper Primary': 'Upper Primary',
+  'JHS': 'JHS',
 };
 
-// Define classes for each level
 const levelClasses = {
-  100: ['Creche', 'Nursery', 'Kindergarten 1', 'Kindergarten 2'],
-  200: ['Class 1', 'Class 2', 'Class 3'],
-  300: ['Class 4', 'Class 5', 'Class 6'],
-  400: ['JHS 1', 'JHS 2', 'JHS 3'],
+  'Kindergarten': ['Creche', 'Nursery', 'Kindergarten 1', 'Kindergarten 2'],
+  'Lower Primary': ['Class 1', 'Class 2', 'Class 3'],
+  'Upper Primary': ['Class 4', 'Class 5', 'Class 6'],
+  'JHS': ['JHS 1', 'JHS 2', 'JHS 3'],
 };
 
 const LevelScreen = ({ route, navigation }) => {
@@ -48,14 +46,14 @@ const LevelScreen = ({ route, navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
-  const [classModalVisible, setClassModalVisible] = useState(false); // For custom class dropdown
-  const [parentModal, setParentModal] = useState(null); // Track which parent modal was open
+  const [classModalVisible, setClassModalVisible] = useState(false);
+  const [parentModal, setParentModal] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [name, setName] = useState('');
   const [id, setId] = useState('');
   const [age, setAge] = useState('');
   const [dob, setDob] = useState('');
-  const [studentClass, setStudentClass] = useState(''); // Class selection
+  const [studentClass, setStudentClass] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [image, setImage] = useState(null);
@@ -78,12 +76,10 @@ const LevelScreen = ({ route, navigation }) => {
 
   const fetchStudents = async () => {
     try {
-      console.log('Fetching students for path:', `students/levels/level${level}`);
-      const querySnapshot = await getDocs(collection(db, 'students', 'levels', `level${level}`));
+      const querySnapshot = await getDocs(collection(db, 'students', 'levels', level));
       const studentList = querySnapshot.docs.map(doc => ({ ...doc.data(), docId: doc.id }));
       setStudents(studentList);
       setFilteredStudents(studentList);
-      console.log('Students fetched successfully:', studentList);
     } catch (error) {
       console.error('Error fetching students:', error);
       Alert.alert('Error', 'Failed to fetch students: ' + error.message);
@@ -106,7 +102,6 @@ const LevelScreen = ({ route, navigation }) => {
 
     if (!result.canceled) {
       setImage(result.assets[0].uri);
-      console.log('Image picked:', result.assets[0].uri);
     }
   };
 
@@ -133,14 +128,12 @@ const LevelScreen = ({ route, navigation }) => {
       });
 
       const result = await response.json();
-      console.log('Cloudinary API Response:', result);
       if (result.secure_url) {
         return result.secure_url;
       } else {
         throw new Error('Cloudinary upload failed: ' + (result.error?.message || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Image upload error details:', error);
       throw new Error('Image upload to Cloudinary failed: ' + error.message);
     }
   };
@@ -154,21 +147,14 @@ const LevelScreen = ({ route, navigation }) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log('User authenticated:', user.uid);
 
       let imageUrl = null;
       if (image) {
-        try {
-          imageUrl = await uploadImageToCloudinary(image);
-          console.log('Image uploaded to Cloudinary:', imageUrl);
-        } catch (uploadError) {
-          console.error('Image upload failed:', uploadError);
-          Alert.alert('Warning', 'Student added, but image upload failed: ' + uploadError.message);
-        }
+        imageUrl = await uploadImageToCloudinary(image);
       }
 
       const studentData = { name, id, age, dob, studentClass, email, uid: user.uid, imageUrl };
-      await addDoc(collection(db, 'students', 'levels', `level${level}`), studentData);
+      await addDoc(collection(db, 'students', 'levels', level), studentData);
 
       Alert.alert('Success', 'Student added successfully');
       clearInputs();
@@ -189,17 +175,11 @@ const LevelScreen = ({ route, navigation }) => {
     try {
       let imageUrl = selectedStudent.imageUrl;
       if (image) {
-        try {
-          imageUrl = await uploadImageToCloudinary(image);
-          console.log('Updated image uploaded to Cloudinary:', imageUrl);
-        } catch (uploadError) {
-          console.error('Image upload failed:', uploadError);
-          Alert.alert('Warning', 'Student updated, but image upload failed: ' + uploadError.message);
-        }
+        imageUrl = await uploadImageToCloudinary(image);
       }
 
       const updatedStudentData = { name, id, age, dob, studentClass, email, imageUrl };
-      await updateDoc(doc(db, 'students', 'levels', `level${level}`, selectedStudent.docId), updatedStudentData);
+      await updateDoc(doc(db, 'students', 'levels', level, selectedStudent.docId), updatedStudentData);
 
       Alert.alert('Success', 'Student updated successfully');
       clearInputs();
@@ -214,7 +194,7 @@ const LevelScreen = ({ route, navigation }) => {
 
   const deleteStudent = async (docId) => {
     try {
-      await deleteDoc(doc(db, 'students', 'levels', `level${level}`, docId));
+      await deleteDoc(doc(db, 'students', 'levels', level, docId));
       Alert.alert('Success', 'Student deleted');
       setDetailsModalVisible(false);
       fetchStudents();
@@ -269,14 +249,11 @@ const LevelScreen = ({ route, navigation }) => {
     setDob(student.dob);
     setStudentClass(student.studentClass || '');
     setEmail(student.email);
-    setImage(null); // Reset image to allow uploading a new one
+    setImage(null);
     setEditModalVisible(true);
   };
 
   const openClassModal = () => {
-    console.log('Opening class modal for level:', level);
-    console.log('Available classes:', levelClasses[level]);
-    // Track which parent modal is open
     if (modalVisible) {
       setParentModal('add');
       setModalVisible(false);
@@ -285,24 +262,19 @@ const LevelScreen = ({ route, navigation }) => {
       setEditModalVisible(false);
     }
     setClassModalVisible(true);
-    console.log('Class modal visibility set to true');
   };
 
   const closeClassModal = () => {
-    console.log('Closing class modal');
     setClassModalVisible(false);
-    // Re-open the parent modal
     if (parentModal === 'add') {
       setModalVisible(true);
     } else if (parentModal === 'edit') {
       setEditModalVisible(true);
     }
     setParentModal(null);
-    console.log('Class modal visibility set to false');
   };
 
   const selectClass = (className) => {
-    console.log('Selected class:', className);
     setStudentClass(className);
     closeClassModal();
   };
@@ -410,7 +382,6 @@ const LevelScreen = ({ route, navigation }) => {
                   placeholder="Password"
                   value={password}
                   onChangeText={setPassword}
-                  keyboardType="default"
                   secureTextEntry
                 />
                 <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
@@ -448,7 +419,6 @@ const LevelScreen = ({ route, navigation }) => {
                   placeholder="Name"
                   value={name}
                   onChangeText={setName}
-                  keyboardType="default"
                 />
                 <TextInput
                   style={styles.input}
@@ -515,31 +485,25 @@ const LevelScreen = ({ route, navigation }) => {
               </View>
             </View>
           </Modal>
-          {/* Class Selection Modal (Custom Dropdown) */}
-          {classModalVisible && (
-            <Modal visible={classModalVisible} animationType="fade" transparent>
-              <View style={styles.classModalContainer}>
-                <View style={styles.classModalContent}>
-                  <Text style={styles.modalTitle}>Select Class</Text>
-                  <ScrollView>
-                    {levelClasses[level] && levelClasses[level].length > 0 ? (
-                      levelClasses[level].map(className => renderClassOption(className))
-                    ) : (
-                      <Text style={styles.classOptionText}>No classes available</Text>
-                    )}
-                  </ScrollView>
-                  <Button
-                    mode="outlined"
-                    onPress={closeClassModal}
-                    style={styles.modalButton}
-                    textColor="#FF5733"
-                  >
-                    Cancel
-                  </Button>
-                </View>
+          {/* Class Selection Modal */}
+          <Modal visible={classModalVisible} animationType="fade" transparent>
+            <View style={styles.classModalContainer}>
+              <View style={styles.classModalContent}>
+                <Text style={styles.modalTitle}>Select Class</Text>
+                <ScrollView>
+                  {levelClasses[level].map(className => renderClassOption(className))}
+                </ScrollView>
+                <Button
+                  mode="outlined"
+                  onPress={closeClassModal}
+                  style={styles.modalButton}
+                  textColor="#FF5733"
+                >
+                  Cancel
+                </Button>
               </View>
-            </Modal>
-          )}
+            </View>
+          </Modal>
           {/* Student Details Modal */}
           <Modal visible={detailsModalVisible} animationType="slide" transparent>
             <View style={styles.modalContainer}>
@@ -604,7 +568,7 @@ const LevelScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff', // Match screen background color
+    backgroundColor: '#fff',
   },
   screen: {
     flex: 1,

@@ -5,7 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  SafeAreaView, // Added SafeAreaView import
+  SafeAreaView,
 } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { db, auth } from './firebase';
@@ -14,12 +14,11 @@ import { onAuthStateChanged } from 'firebase/auth';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Map level numbers to new names for display
 const levelNames = {
-  100: 'Pre-school',
-  200: 'Lower Primary',
-  300: 'Upper Primary',
-  400: 'JHS',
+  Kindergarten: 'Kindergarten',
+  'Lower Primary': 'Lower Primary',
+  'Upper Primary': 'Upper Primary',
+  JHS: 'JHS',
 };
 
 const Students = ({ navigation }) => {
@@ -29,8 +28,10 @@ const Students = ({ navigation }) => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        console.log('User authenticated in Students:', currentUser.uid);
-        initializeLevelsDoc();
+        console.log('User authenticated in Students:', currentUser.uid, 'Email:', currentUser.email);
+        if (currentUser.email === 'admin@admin.com') {
+          initializeLevelsDoc();
+        }
       } else {
         console.log('No user is authenticated in Students. Redirecting to LoginScreen.');
         navigation.navigate('LoginScreen');
@@ -43,7 +44,7 @@ const Students = ({ navigation }) => {
   const initializeLevelsDoc = async () => {
     try {
       console.log('Attempting to initialize levels document...');
-      await setDoc(doc(db, 'students', 'levels'), { init: true }, { merge: true });
+      await setDoc(doc(db, 'students', 'levels'), { init: true, lastUpdated: new Date().toISOString() }, { merge: true });
       console.log('Levels document initialized successfully');
     } catch (error) {
       console.error('Error initializing levels document:', error);
@@ -52,9 +53,10 @@ const Students = ({ navigation }) => {
   };
 
   const navigateToLevel = (level) => {
-    // Keep the route names as Level100, Level200, etc.
-    navigation.navigate(`Level${level}`);
+    navigation.navigate(`Level${level}`, { level });
   };
+
+  const levels = ['Kindergarten', 'Lower Primary', 'Upper Primary', 'JHS'];
 
   return (
     <PaperProvider>
@@ -62,13 +64,12 @@ const Students = ({ navigation }) => {
         <View style={styles.screen}>
           <Text style={styles.title}>Classes</Text>
           <View style={styles.levelContainer}>
-            {[100, 200, 300, 400].map(level => (
+            {levels.map(level => (
               <TouchableOpacity
                 key={level}
                 style={styles.levelBox}
                 onPress={() => navigateToLevel(level)}
               >
-                {/* Display the new name instead of "Level {level}" */}
                 <Text style={styles.levelText}>{levelNames[level]}</Text>
               </TouchableOpacity>
             ))}
@@ -82,7 +83,7 @@ const Students = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff', // Match screen background color
+    backgroundColor: '#fff',
   },
   screen: {
     flex: 1,
