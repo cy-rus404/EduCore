@@ -4,7 +4,7 @@ import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from 'react
 import { useNavigation } from '@react-navigation/native';
 
 const dashboardData = [
-  { id: '1', title: 'Students', image: require('../assets/images/student.png'), screen: 'UsersScreen' },
+  { id: '1', title: 'Students', image: require('../assets/images/student.png'), screen: 'User' },
   { id: '2', title: 'Teachers', image: require('../assets/images/teaching.jpg'), screen: 'AnalyticsScreen' },
   { id: '3', title: 'Classes', image: require('../assets/images/class.jpg'), screen: 'SettingsScreen' },
   { id: '4', title: 'Messages', image: require('../assets/images/message.jpg'), screen: 'ReportsScreen' },
